@@ -1,5 +1,5 @@
 
-const BaseModel = require('./BaseModel');
+const BaseModel = require('./base.model');
 
 class IncomeModel extends BaseModel {
   constructor() {

@@ -1,6 +1,6 @@
 
 
-const BaseModel = require('./BaseModel');
+const BaseModel = require('./base.model');
 
 class IncidentModel extends BaseModel {
   constructor() {
