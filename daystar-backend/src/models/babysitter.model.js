@@ -1,5 +1,5 @@
 
-const BaseModel = require('./BaseModel');
+const BaseModel = require('./base.model');
 const { calculateAge } = require('../services/ageUtils');
 
 class BabysitterModel extends BaseModel {
