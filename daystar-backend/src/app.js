@@ -3,13 +3,13 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const { errorHandler } = require('./middleware/errorHandler');
 const rateLimit = require('express-rate-limit');
+const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
 // ── Security & Logging ─────────────────────────────────────────────────────
-app.use(helmet()); // Sets sensible security headers
+app.use(helmet());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // ── CORS ───────────────────────────────────────────────────────────────────
@@ -21,8 +21,35 @@ app.use(cors({
 }));
 
 // ── Body Parsing ───────────────────────────────────────────────────────────
-app.use(express.json({ limit: '10kb' })); // Reject suspiciously large payloads
+app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// ── Rate Limiting ───────────────────────────────────────────────────────────
+// MUST be before routes — otherwise requests hit routes first
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,                   // 10 login attempts per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many login attempts. Please try again in 15 minutes.'
+  }
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100,            // 100 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many requests. Please slow down.'
+  }
+});
+
+app.use('/api/auth/login', loginLimiter);
+app.use('/api', apiLimiter);
 
 // ── Health Check ───────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
@@ -34,20 +61,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 attempts per 15 minutes
-  message: {
-    success: false,
-    message: 'Too many login attempts. Try again in 15 minutes.'
-  }
-});
-
-const apiLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 100 // 100 requests per minute
-});
-
 // ── API Routes ─────────────────────────────────────────────────────────────
 app.use('/api/auth',        require('./routes/auth.routes'));
 app.use('/api/babysitters', require('./routes/babysitters.routes'));
@@ -56,8 +69,6 @@ app.use('/api/attendance',  require('./routes/attendance.routes'));
 app.use('/api',             require('./routes/finance.routes'));
 app.use('/api/incidents',   require('./routes/incidents.routes'));
 app.use('/api',             require('./routes/dashboard.routes'));
-app.use('/api/auth/login', loginLimiter);
-app.use('/api', apiLimiter);
 
 // ── 404 Handler ────────────────────────────────────────────────────────────
 app.use((req, res) => {
@@ -68,7 +79,6 @@ app.use((req, res) => {
 });
 
 // ── Global Error Handler ───────────────────────────────────────────────────
-// MUST be last. Express identifies error handlers by 4 arguments.
 app.use(errorHandler);
 
 module.exports = app;
