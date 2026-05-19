@@ -5,6 +5,8 @@ const { getByDate, getDailySummary, checkIn, checkOut } = require('../controller
 const { requireAuth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const { checkInSchema, checkOutSchema } = require('../config/schemas');
+const { validateQuery } = require('../middleware/validate');
+const { dateQuerySchema } = require('../config/schemas');
 
 /**
  * Attendance Routes
@@ -30,5 +32,8 @@ router.post('/check-in', validate(checkInSchema), checkIn);
 
 // PUT /api/attendance/:id/check-out
 router.put('/:id/check-out', validate(checkOutSchema), checkOut);
+
+router.get('/', validateQuery(dateQuerySchema), getByDate);
+router.get('/summary', validateQuery(dateQuerySchema), getDailySummary);
 
 module.exports = router;

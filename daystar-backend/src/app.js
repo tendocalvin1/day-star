@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { errorHandler } = require('./middleware/errorHandler');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
@@ -33,6 +34,20 @@ app.get('/health', (req, res) => {
   });
 });
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 attempts per 15 minutes
+  message: {
+    success: false,
+    message: 'Too many login attempts. Try again in 15 minutes.'
+  }
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100 // 100 requests per minute
+});
+
 // ── API Routes ─────────────────────────────────────────────────────────────
 app.use('/api/auth',        require('./routes/auth.routes'));
 app.use('/api/babysitters', require('./routes/babysitters.routes'));
@@ -41,6 +56,8 @@ app.use('/api/attendance',  require('./routes/attendance.routes'));
 app.use('/api',             require('./routes/finance.routes'));
 app.use('/api/incidents',   require('./routes/incidents.routes'));
 app.use('/api',             require('./routes/dashboard.routes'));
+app.use('/api/auth/login', loginLimiter);
+app.use('/api', apiLimiter);
 
 // ── 404 Handler ────────────────────────────────────────────────────────────
 app.use((req, res) => {

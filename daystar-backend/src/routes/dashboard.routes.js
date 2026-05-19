@@ -8,7 +8,8 @@ const {
   getNotifications,
 } = require('../controllers/dashboard.controller');
 const { requireAuth, requireManager } = require('../middleware/auth');
-
+const { validateQuery } = require('../middleware/validate');
+const { dateRangeQuerySchema } = require('../config/schemas');
 /**
  * Dashboard & Reports Routes
  * Base path: /api
@@ -30,5 +31,8 @@ router.get('/reports/attendance', requireManager, getAttendanceReport);
 // GET /api/notifications — both roles
 // Returns last 20 notifications and marks them as read
 router.get('/notifications', getNotifications);
+
+router.get('/reports/financial', requireManager, validateQuery(dateRangeQuerySchema), getFinancialReport);
+router.get('/reports/attendance', requireManager, validateQuery(dateRangeQuerySchema), getAttendanceReport);
 
 module.exports = router;
