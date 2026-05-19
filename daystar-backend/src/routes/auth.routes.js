@@ -5,11 +5,6 @@ const { requireAuth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const { loginSchema } = require('../config/schemas');
 
-/**
- * Auth Routes
- * Base path: /api/auth
- */
-
 // POST /api/auth/login
 router.post('/login', validate(loginSchema), login);
 
