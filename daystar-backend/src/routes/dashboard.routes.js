@@ -6,6 +6,7 @@ const {
   getFinancialReport,
   getAttendanceReport,
   getNotifications,
+  exportFinancialReport
 } = require('../controllers/dashboard.controller');
 const { requireAuth, requireManager } = require('../middleware/auth');
 const { validateQuery } = require('../middleware/validate');
@@ -34,5 +35,8 @@ router.get('/notifications', getNotifications);
 
 router.get('/reports/financial', requireManager, validateQuery(dateRangeQuerySchema), getFinancialReport);
 router.get('/reports/attendance', requireManager, validateQuery(dateRangeQuerySchema), getAttendanceReport);
+
+// GET /api/reports/financial/export?start=&end=
+router.get('/reports/financial/export', requireManager, exportFinancialReport);
 
 module.exports = router;

@@ -181,9 +181,59 @@ async function getNotifications(req, res, next) {
   }
 }
 
+
+/**
+ * GET /api/reports/financial/export
+ * Manager only — exports financial data as CSV
+ * Query: ?start=2026-05-01&end=2026-05-31
+ */
+async function exportFinancialReport(req, res, next) {
+  try {
+    const { start, end } = req.query;
+
+    if (!start || !end) {
+      return res.status(400).json({
+        success: false,
+        message: 'start and end query parameters are required.',
+      });
+    }
+
+    const [incomeRecords, expenseRecords] = await Promise.all([
+      IncomeModel.findWithFilters({ start, end }),
+      ExpenseModel.findWithFilters({ start, end }),
+    ]);
+
+    // Build CSV content
+    const rows = [
+      // Header row
+      'Type,Date,Description,Category,Amount (UGX),Payment Method',
+
+      // Income rows
+      ...incomeRecords.map((r) =>
+        `Income,${r.payment_date},${r.child_name || 'N/A'},Parent Payment,${r.amount_ugx},${r.payment_method}`
+      ),
+
+      // Expense rows
+      ...expenseRecords.map((r) =>
+        `Expense,${r.expense_date},${r.description},${r.category.replace(/_/g, ' ')},${r.amount_ugx},N/A`
+      ),
+    ];
+
+    const csv = rows.join('\n');
+    const filename = `daystar-financial-report-${start}-to-${end}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    return res.send(csv);
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getTodayDashboard,
   getFinancialReport,
   getAttendanceReport,
   getNotifications,
+  exportFinancialReport
 };
