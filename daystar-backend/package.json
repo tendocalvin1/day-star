@@ -5,12 +5,12 @@
   "description": "Daystar Daycare Center Management System - Backend API",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "migrate": "knex migrate:latest --knexfile src/config/database.js",
-    "migrate:rollback": "knex migrate:rollback --knexfile src/config/database.js",
-    "seed": "knex seed:run --knexfile src/config/database.js",
-    "db:reset": "npm run migrate:rollback && npm run migrate && npm run seed"
+  "start": "node src/server.js",
+  "dev": "nodemon src/server.js",
+  "migrate": "knex migrate:latest --knexfile knexfile.js",
+  "migrate:rollback": "knex migrate:rollback --knexfile knexfile.js",
+  "seed": "knex seed:run --knexfile knexfile.js",
+  "db:reset": "npm run migrate:rollback && npm run migrate && npm run seed"
   },
   "keywords": [],
   "author": "Tendo Calvin - Full Stack Engineer",
