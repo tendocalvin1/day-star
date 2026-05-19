@@ -73,4 +73,38 @@ async function getMe(req, res, next) {
   }
 }
 
-module.exports = { login, getMe };
+
+/**
+ * PUT /api/auth/change-password
+ * Authenticated users can change their own password
+ */
+async function changePassword(req, res, next) {
+  try {
+    const { current_password, new_password } = req.body;
+
+    if (!current_password || !new_password) {
+      throw new AppError('current_password and new_password are required.', 400);
+    }
+
+    if (new_password.length < 8) {
+      throw new AppError('New password must be at least 8 characters.', 400);
+    }
+
+    const user = await UserModel.findByEmail(req.user.email);
+    const match = await bcrypt.compare(current_password, user.password_hash);
+
+    if (!match) throw new AppError('Current password is incorrect.', 401);
+
+    const hash = await bcrypt.hash(new_password, 12);
+    await UserModel.updateById(req.user.id, { password_hash: hash });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password changed successfully.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { login, getMe, changePassword };

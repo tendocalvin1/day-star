@@ -3,14 +3,18 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const { errorHandler } = require('./middleware/errorHandler');
+const validateEnv = require('./config/validateEnv');
 
 const app = express();
 
 // ── Security & Logging ─────────────────────────────────────────────────────
 app.use(helmet());
+app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+validateEnv();
 
 // ── CORS ───────────────────────────────────────────────────────────────────
 app.use(cors({

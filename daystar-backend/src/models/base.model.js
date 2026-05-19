@@ -98,6 +98,31 @@ class BaseModel {
   async transaction(callback) {
     return this.db.transaction(callback);
   }
+
+
+  /**
+ * Find records with pagination support
+ * @param {object} conditions
+ * @param {number} limit - records per page
+ * @param {number} offset - records to skip
+ */
+async findPaginated(conditions = {}, limit = 20, offset = 0) {
+  return this.db(this.table)
+    .where(conditions)
+    .limit(limit)
+    .offset(offset);
+}
+
+/**
+ * Count total records for pagination metadata
+ */
+async countWhere(conditions = {}) {
+  const result = await this.db(this.table)
+    .where(conditions)
+    .count('id as count')
+    .first();
+  return parseInt(result.count, 10);
+}
 }
 
 module.exports = BaseModel;

@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const { BabysitterModel, UserModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 const { validateBabysitterAge } = require('../services/ageUtils');
+const { getPagination, paginatedResponse } = require('../utils/pagination');
 
 /**
  * GET /api/babysitters
@@ -11,14 +12,10 @@ const { validateBabysitterAge } = require('../services/ageUtils');
  */
 async function getAll(req, res, next) {
   try {
-    // BabysitterModel.findAllActive() — joins age, filters is_active=true
-    const babysitters = await BabysitterModel.findAllActive();
-
-    return res.status(200).json({
-      success: true,
-      count: babysitters.length,
-      data: babysitters,
-    });
+    const { page, limit, offset } = getPagination(req.query);
+    const babysitters = await BabysitterModel.findAllActive({ limit, offset });
+    const total = await BabysitterModel.countWhere({ is_active: true });
+    return paginatedResponse(res, babysitters, total, page, limit);
   } catch (error) {
     next(error);
   }

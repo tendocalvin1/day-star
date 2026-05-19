@@ -10,22 +10,26 @@ class ChildModel extends BaseModel {
   /**
    * Find all children with computed age, supports filtering
    */
-  async findAllWithAge({ search, session_type, is_active = true } = {}) {
-    let query = this.db(this.table).select(
-      'id', 'full_name', 'date_of_birth', 'parent_name',
-      'parent_phone', 'parent_email', 'session_type',
-      'special_needs', 'is_active', 'created_at'
-    );
+  async findAllWithAge({ search, session_type, is_active = true, limit = 20, offset = 0 } = {}) {
+  let query = this.db(this.table).select(
+    'id', 'full_name', 'date_of_birth', 'parent_name',
+    'parent_phone', 'parent_email', 'session_type',
+    'special_needs', 'is_active', 'created_at'
+  );
 
-    if (is_active !== 'all') {
-      query = query.where('is_active', is_active === 'true' || is_active === true);
-    }
-    if (session_type) query = query.where('session_type', session_type);
-    if (search)       query = query.whereILike('full_name', `%${search}%`);
-
-    const rows = await query.orderBy('full_name');
-    return rows.map((c) => ({ ...c, age: calculateChildAge(c.date_of_birth) }));
+  if (is_active !== 'all') {
+    query = query.where('is_active', is_active === 'true' || is_active === true);
   }
+  if (session_type) query = query.where('session_type', session_type);
+  if (search)       query = query.whereILike('full_name', `%${search}%`);
+
+  const rows = await query
+    .orderBy('full_name')
+    .limit(limit)
+    .offset(offset);
+
+  return rows.map((c) => ({ ...c, age: calculateChildAge(c.date_of_birth) }));
+}
 
   /**
    * Find child by ID with recent attendance history
