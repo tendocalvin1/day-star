@@ -17,6 +17,138 @@ const { dateRangeQuerySchema } = require('../config/schemas');
  * All routes require authentication
  */
 
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Dashboard
+ *     description: Today's operational summary
+ *   - name: Reports
+ *     description: Financial and attendance reports
+ *   - name: Notifications
+ *     description: In-app notification management
+ */
+
+/**
+ * @swagger
+ * /api/dashboard/today:
+ *   get:
+ *     summary: Get today's complete operational dashboard
+ *     tags: [Dashboard]
+ *     description: Returns attendance, income, expenses, alerts in one request using parallel queries
+ *     responses:
+ *       200:
+ *         description: Today's dashboard data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     date:               { type: string }
+ *                     attendance:         { type: object }
+ *                     income_today_ugx:   { type: integer }
+ *                     expenses_today_ugx: { type: integer }
+ *                     net_today_ugx:      { type: integer }
+ *                     uncleared_payments: { type: object }
+ *                     unresolved_incidents: { type: integer }
+ */
+
+
+/**
+ * @swagger
+ * /api/reports/financial:
+ *   get:
+ *     summary: Get financial report for a date range
+ *     tags: [Reports]
+ *     parameters:
+ *       - in: query
+ *         name: start
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: '2026-05-01'
+ *       - in: query
+ *         name: end
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: '2026-05-31'
+ *     responses:
+ *       200:
+ *         description: Income vs expense summary with daily and category breakdowns
+ */
+
+
+/**
+ * @swagger
+ * /api/reports/financial/export:
+ *   get:
+ *     summary: Export financial report as CSV
+ *     tags: [Reports]
+ *     parameters:
+ *       - in: query
+ *         name: start
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: end
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: CSV file download
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ */
+
+
+
+/**
+ * @swagger
+ * /api/reports/attendance:
+ *   get:
+ *     summary: Get attendance report for a date range
+ *     tags: [Reports]
+ *     parameters:
+ *       - in: query
+ *         name: start
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: end
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Daily attendance counts and summary
+ */
+
+/**
+ * @swagger
+ * /api/notifications:
+ *   get:
+ *     summary: Get notifications and mark them as read
+ *     tags: [Notifications]
+ *     responses:
+ *       200:
+ *         description: List of notifications
+ */
 router.use(requireAuth);
 
 // GET /api/dashboard/today — manager only
