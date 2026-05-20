@@ -7,6 +7,9 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const { errorHandler } = require('./middleware/errorHandler');
 const validateEnv = require('./config/validateEnv');
+const db = require('./config/database');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 
 const app = express();
 
@@ -15,6 +18,8 @@ app.use(helmet());
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 validateEnv();
+
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // ── CORS ───────────────────────────────────────────────────────────────────
 app.use(cors({
@@ -56,13 +61,25 @@ app.use('/api/auth/login', loginLimiter);
 app.use('/api', apiLimiter);
 
 // ── Health Check ───────────────────────────────────────────────────────────
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    app: 'Daystar Daycare API',
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV,
-  });
+app.get('/health', async (req, res) => {
+  try {
+    await db.raw('SELECT 1');
+    res.json({
+      status: 'healthy',
+      app: 'Daystar Daycare API',
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      database: 'connected',
+      uptime: `${Math.floor(process.uptime())}s`,
+    });
+  } catch (err) {
+    res.status(503).json({
+      status: 'unhealthy',
+      database: 'disconnected',
+      error: err.message,
+    });
+  }
 });
 
 // ── API Routes ─────────────────────────────────────────────────────────────
