@@ -55,6 +55,7 @@ async function login(req, res, next) {
  * GET /api/auth/me
  * Returns the currently authenticated user
  * requireAuth middleware runs first and attaches req.user
+ * This is also for security purposes as well
  */
 async function getMe(req, res, next) {
   try {
