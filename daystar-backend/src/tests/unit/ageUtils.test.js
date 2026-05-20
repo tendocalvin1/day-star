@@ -1,7 +1,7 @@
 
 
 // tests/unit/ageUtils.test.js
-const { validateBabysitterAge, calculateAge } = require('../../src/services/ageUtils');
+const { validateBabysitterAge, calculateAge, calculateChildAge } = require('../../services/ageUtils');
 
 describe('validateBabysitterAge', () => {
   test('accepts babysitter aged 25', () => {

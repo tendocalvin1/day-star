@@ -60,6 +60,12 @@ const apiLimiter = rateLimit({
 app.use('/api/auth/login', loginLimiter);
 app.use('/api', apiLimiter);
 
+// ── API Documentation ───────────────────────────────────────────────────────
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'Daystar Daycare API Docs',
+  customCss: '.swagger-ui .topbar { background-color: #1e40af; }',
+}));
+
 // ── Health Check ───────────────────────────────────────────────────────────
 app.get('/health', async (req, res) => {
   try {
