@@ -10,18 +10,31 @@ class BabysitterModel extends BaseModel {
   /**
    * Get all active babysitters with computed age
    */
-  async findAllActive() {
-    const rows = await this.db(this.table)
-      .select(
-        'id', 'first_name', 'last_name', 'email', 'phone',
-        'nin', 'date_of_birth', 'next_of_kin_name',
-        'next_of_kin_phone', 'is_active', 'created_at'
-      )
-      .where({ is_active: true })
-      .orderBy('first_name');
+    async findAllActive({ search, limit = 20, offset = 0 } = {}) {
+  let query = this.db(this.table)
+    .select(
+      'id', 'first_name', 'last_name', 'email', 'phone',
+      'nin', 'date_of_birth', 'next_of_kin_name',
+      'next_of_kin_phone', 'is_active', 'created_at'
+    )
+    .where({ is_active: true });
 
-    return rows.map((b) => ({ ...b, age: calculateAge(b.date_of_birth) }));
+  if (search) {
+    query = query.where(function() {
+      this.whereILike('first_name', `%${search}%`)
+          .orWhereILike('last_name', `%${search}%`)
+          .orWhereILike('phone', `%${search}%`)
+          .orWhereILike('nin', `%${search}%`);
+    });
   }
+
+  const rows = await query
+    .orderBy('first_name')
+    .limit(limit)
+    .offset(offset);
+
+  return rows.map((b) => ({ ...b, age: calculateAge(b.date_of_birth) }));
+}
 
   /**
    * Find babysitter by ID with their linked user account

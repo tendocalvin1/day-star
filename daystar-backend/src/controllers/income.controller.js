@@ -2,6 +2,7 @@
 
 const { IncomeModel, ChildModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
+const auditService = require('../services/auditService');
 
 /**
  * GET /api/income
@@ -11,10 +12,7 @@ const { AppError } = require('../middleware/errorHandler');
 async function getAll(req, res, next) {
   try {
     const { start, end, child_id } = req.query;
-
-    // IncomeModel.findWithFilters() — joins children table for names
     const records = await IncomeModel.findWithFilters({ start, end, child_id });
-
     const totalAmount = records.reduce((sum, r) => sum + r.amount_ugx, 0);
 
     return res.status(200).json({
@@ -36,16 +34,25 @@ async function create(req, res, next) {
   try {
     const data = req.validatedData;
 
-    // Verify child exists if child_id is provided
     if (data.child_id) {
       const child = await ChildModel.findOne({ id: data.child_id, is_active: true });
       if (!child) throw new AppError('Child not found.', 404);
     }
 
-    // BaseModel.create() — inserts and returns the new record
     const record = await IncomeModel.create({
       ...data,
       created_by: req.user.id,
+    });
+
+    // Audit log — inside the function, not outside
+    await auditService.log({
+      userId: req.user.id,
+      userEmail: req.user.email,
+      action: 'income.created',
+      entityType: 'income',
+      entityId: record.id,
+      newValues: record,
+      req,
     });
 
     return res.status(201).json({
@@ -61,15 +68,23 @@ async function create(req, res, next) {
 /**
  * DELETE /api/income/:id
  * Manager only — hard delete allowed for income correction
- * Income records can be deleted and re-entered if a mistake was made
  */
 async function remove(req, res, next) {
   try {
-    // BaseModel.findById() — verify it exists first
     const record = await IncomeModel.findById(req.params.id);
     if (!record) throw new AppError('Income record not found.', 404);
 
-    // BaseModel.deleteById() — hard delete is acceptable for income corrections
+    // Audit log before deleting
+    await auditService.log({
+      userId: req.user.id,
+      userEmail: req.user.email,
+      action: 'income.deleted',
+      entityType: 'income',
+      entityId: record.id,
+      oldValues: record,
+      req,
+    });
+
     await IncomeModel.deleteById(req.params.id);
 
     return res.status(200).json({
