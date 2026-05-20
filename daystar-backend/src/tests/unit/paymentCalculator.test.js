@@ -1,7 +1,7 @@
 
 
 // tests/unit/paymentCalculator.test.js
-const { calculatePayment, RATES } = require('../../src/services/paymentCalculator');
+const { calculatePayment, RATES } = require('../../services/paymentCalculator');
 
 describe('calculatePayment', () => {
   test('calculates half day payment correctly', () => {
