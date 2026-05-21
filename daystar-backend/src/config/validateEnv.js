@@ -1,4 +1,4 @@
-
+const logger = require('./logger');
 
 /**
  * Environment Variable Validation
@@ -21,13 +21,11 @@ function validateEnv() {
   const missing = required.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
-    console.error('\n❌ Missing required environment variables:');
-    missing.forEach((key) => console.error(`   - ${key}`));
-    console.error('\n   Add these to your .env file and restart the server.\n');
+    logger.error('Missing required environment variables', { missing });
     process.exit(1);
   }
 
-  console.log('✅ Environment variables validated');
+  logger.info('Environment variables validated');
 }
 
 module.exports = validateEnv;
