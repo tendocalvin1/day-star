@@ -1,9 +1,10 @@
+const logger = require('../config/logger');
 
 /**
  * Global Error Handler
  * Must be the LAST middleware registered in app.js.
  * Express identifies it as an error handler by its 4-argument signature.
- * 
+ *
  * All controllers call next(error) to reach this handler.
  * Never send error responses directly from controllers.
  */
@@ -13,7 +14,7 @@ class AppError extends Error {
   constructor(message, statusCode) {
     super(message);
     this.statusCode = statusCode;
-    this.isOperational = true; // vs programming errors (bugs)
+    this.isOperational = true;
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -25,7 +26,6 @@ function errorHandler(err, req, res, next) {
 
   // Handle known DB constraint errors (PostgreSQL)
   if (err.code === '23505') {
-    // Unique constraint violation
     statusCode = 409;
     if (err.detail?.includes('nin')) {
       message = 'A babysitter with this National ID Number already exists.';
@@ -39,7 +39,6 @@ function errorHandler(err, req, res, next) {
   }
 
   if (err.code === '23503') {
-    // Foreign key constraint violation
     statusCode = 400;
     message = 'Referenced record does not exist.';
   }
@@ -58,12 +57,16 @@ function errorHandler(err, req, res, next) {
     });
   }
 
-  // Don't leak stack traces in production
-  const isDev = process.env.NODE_ENV === 'development';
+  // Log all errors through Winston — not console
+  logger.error(`${req.method} ${req.path}`, {
+    message: err.message,
+    statusCode,
+    userId: req.user?.id,
+    stack: err.stack,
+    isOperational: err.isOperational || false,
+  });
 
-  if (isDev) {
-    console.error(`[ERROR] ${req.method} ${req.path}:`, err);
-  }
+  const isDev = process.env.NODE_ENV === 'development';
 
   res.status(statusCode).json({
     success: false,

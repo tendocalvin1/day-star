@@ -62,21 +62,12 @@ const database = knex(knexConfig);
 database
   .raw('SELECT 1 + 1 AS result')
   .then(() => {
-    console.log(`✅ PostgreSQL connected [${environment}]`);
-    console.log(`   Database: ${process.env.DB_NAME || 'daystar_daycare'}`);
-  })
-  .catch((err) => {
-    console.error('❌ PostgreSQL connection failed!');
-    console.error(`   Error: ${err.message}`);
-    console.error('');
-    console.error('   Fix checklist:');
-    console.error('   1. Is PostgreSQL running?');
-    console.error('      Windows: open Services → find postgresql → Start');
-    console.error('   2. Does the database exist?');
-    console.error(`      Run: createdb ${process.env.DB_NAME || 'daystar_daycare'}`);
-    console.error('   3. Check DB_USER and DB_PASSWORD in your .env file');
-    process.exit(1);
-  });
+  logger.info(`PostgreSQL connected [${environment}] — database: ${process.env.DB_NAME || 'daystar_daycare'}`);
+})
+.catch((err) => {
+  logger.error('PostgreSQL connection failed', { error: err.message, environment });
+  process.exit(1);
+});
 
 // ── Exports ────────────────────────────────────────────────────────────────
 
