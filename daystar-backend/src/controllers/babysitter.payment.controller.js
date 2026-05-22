@@ -2,6 +2,7 @@
 
 const { BabysitterPaymentModel, AttendanceModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
+const logger = require('../config/logger'); 
 
 // Payment rates as defined in the exam spec
 const RATES = {
@@ -101,6 +102,13 @@ async function generate(req, res, next) {
 
       results.push(record);
     }
+
+      logger.info('Babysitter payments generated', {
+      date,
+      count: results.length,
+      managerId: req.user.id,
+    });
+
 
     return res.status(201).json({
       success: true,

@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { UserModel, BabysitterModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
+const logger = require('../config/logger');
 
 /**
  * POST /api/auth/login
@@ -34,6 +35,25 @@ async function login(req, res, next) {
     if (user.role === 'babysitter' && user.babysitter_id) {
       profile = await BabysitterModel.findById(user.babysitter_id);
     }
+
+    logger.info('User logged in', {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      ip: req.ip,
+    });
+
+    return res.status(200).json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        babysitter_id: user.babysitter_id,
+        profile,
+      },
+    });
 
     return res.status(200).json({
       success: true,

@@ -2,6 +2,7 @@
 
 const { IncidentModel, ChildModel, BabysitterModel, UserModel, NotificationModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
+const logger = require('../config/logger');
 
 /**
  * GET /api/incidents
@@ -77,6 +78,19 @@ async function create(req, res, next) {
         relatedType: 'incident',
       });
     }
+
+    logger.warn('Incident reported', {
+      incidentId: incident.id,
+      childId: child_id,
+      severity,
+      babysitterId: req.user.babysitter_id,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Incident reported. Manager has been notified.',
+      data: incident,
+    });
 
     return res.status(201).json({
       success: true,

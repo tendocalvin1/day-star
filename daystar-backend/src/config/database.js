@@ -1,7 +1,7 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 const knex = require('knex');
 const path = require('path');
-
+const logger = require('./logger');
 /**
  * PostgreSQL Database Connection
  *
