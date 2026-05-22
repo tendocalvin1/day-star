@@ -6,7 +6,7 @@ describe('POST /api/auth/login', () => {
   test('returns token for valid credentials', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'manager@daystar.ug', password: 'newpassword123' });
+      .send({ email: 'manager@daystar.ug', password: 'password123' });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
