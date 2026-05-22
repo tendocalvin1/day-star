@@ -1,3 +1,5 @@
+
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -5,21 +7,28 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const { errorHandler } = require('./middleware/errorHandler');
-const validateEnv = require('./config/validateEnv');
-const db = require('./config/database');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
+const db = require('./config/database');
+const logger = require('./config/logger');
+const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
 // ── Security & Logging ─────────────────────────────────────────────────────
 app.use(helmet());
 app.use(compression());
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-validateEnv();
 
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Morgan logs HTTP requests through Winston
+app.use(morgan(
+  ':method :url :status :res[content-length] - :response-time ms',
+  {
+    stream: {
+      write: (message) => logger.http(message.trim()),
+    },
+    skip: () => process.env.NODE_ENV === 'test',
+  }
+));
 
 // ── CORS ───────────────────────────────────────────────────────────────────
 app.use(cors({
@@ -34,27 +43,26 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // ── Rate Limiting ───────────────────────────────────────────────────────────
-// MUST be before routes — otherwise requests hit routes first
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,                   // 10 login attempts per 15 minutes
+  windowMs: 15 * 60 * 1000,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     success: false,
-    message: 'Too many login attempts. Please try again in 15 minutes.'
-  }
+    message: 'Too many login attempts. Please try again in 15 minutes.',
+  },
 });
 
 const apiLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 100,            // 100 requests per minute
+  windowMs: 60 * 1000,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     success: false,
-    message: 'Too many requests. Please slow down.'
-  }
+    message: 'Too many requests. Please slow down.',
+  },
 });
 
 app.use('/api/auth/login', loginLimiter);
