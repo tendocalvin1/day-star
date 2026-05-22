@@ -121,6 +121,9 @@ router.get('/:id', getById);
 // POST /api/children — manager only
 router.post('/', requireManager, validate(createChildSchema), create);
 
+// GET /api/children?session_type=full_day — filter by session type
+router.get('/', validateQuery(dateQuerySchema), getAll);
+
 // PUT /api/children/:id — manager only
 router.put('/:id', requireManager, validate(updateChildSchema), update);
 /**
