@@ -1,8 +1,9 @@
 
 
-const { IncidentModel, ChildModel, BabysitterModel, UserModel, NotificationModel } = require('../models');
+const { IncidentModel, ChildModel, BabysitterModel, UserModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 const logger = require('../config/logger');
+const { addNotificationJob } = require('../config/queue');
 
 /**
  * GET /api/incidents
@@ -68,8 +69,8 @@ async function create(req, res, next) {
     ]);
 
     if (manager && babysitter) {
-      // NotificationModel.notify() — stores in-app notification
-      await NotificationModel.notify({
+      // Queue the notification instead of saving synchronously
+      await addNotificationJob({
         type: 'incident_reported',
         title: `Incident reported: ${child.full_name}`,
         message: `${babysitter.first_name} ${babysitter.last_name} reported a ${severity} severity incident for ${child.full_name}.`,
@@ -84,12 +85,6 @@ async function create(req, res, next) {
       childId: child_id,
       severity,
       babysitterId: req.user.babysitter_id,
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: 'Incident reported. Manager has been notified.',
-      data: incident,
     });
 
     return res.status(201).json({

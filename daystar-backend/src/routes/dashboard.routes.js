@@ -155,20 +155,17 @@ router.use(requireAuth);
 // Returns today's attendance, income, expenses, alerts in one request
 router.get('/dashboard/today', requireManager, getTodayDashboard);
 
-// GET /api/reports/financial?start=2025-04-01&end=2025-04-30 — manager only
-router.get('/reports/financial', requireManager, getFinancialReport);
+// GET /api/reports/financial?start=2026-05-01&end=2026-05-31 — manager only
+router.get('/reports/financial', requireManager, validateQuery(dateRangeQuerySchema), getFinancialReport);
 
-// GET /api/reports/attendance?start=2025-04-01&end=2025-04-30 — manager only
-router.get('/reports/attendance', requireManager, getAttendanceReport);
+// GET /api/reports/attendance?start=2026-05-01&end=2026-05-31 — manager only
+router.get('/reports/attendance', requireManager, validateQuery(dateRangeQuerySchema), getAttendanceReport);
+
+// GET /api/reports/financial/export?start=2026-05-01&end=2026-05-31 — manager only
+router.get('/reports/financial/export', requireManager, validateQuery(dateRangeQuerySchema), exportFinancialReport);
 
 // GET /api/notifications — both roles
 // Returns last 20 notifications and marks them as read
 router.get('/notifications', getNotifications);
-
-router.get('/reports/financial', requireManager, validateQuery(dateRangeQuerySchema), getFinancialReport);
-router.get('/reports/attendance', requireManager, validateQuery(dateRangeQuerySchema), getAttendanceReport);
-
-// GET /api/reports/financial/export?start=&end=
-router.get('/reports/financial/export', requireManager, exportFinancialReport);
 
 module.exports = router;

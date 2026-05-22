@@ -103,13 +103,19 @@
  */
 
 const router = require('express').Router();
-const { login, getMe, changePassword} = require('../controllers/auth.controller');
+const { login, refresh, logout, getMe, changePassword } = require('../controllers/auth.controller');
 const { requireAuth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const { loginSchema } = require('../config/schemas');
 
 // POST /api/auth/login
 router.post('/login', validate(loginSchema), login);
+
+// POST /api/auth/refresh
+router.post('/refresh', refresh);
+
+// POST /api/auth/logout
+router.post('/logout', logout);
 
 // GET /api/auth/me
 router.get('/me', requireAuth, getMe);
