@@ -3,6 +3,7 @@
 const { BabysitterPaymentModel, AttendanceModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 const logger = require('../config/logger'); 
+const { addPaymentJob } = require('../config/queue');
 
 // Payment rates as defined in the exam spec
 const RATES = {
@@ -46,12 +47,11 @@ async function getAll(req, res, next) {
 
 /**
  * POST /api/babysitter-payments/generate
- * Manager only — generates payment records from today's attendance
+ * Manager only — generates payment records from today's attendance asynchronously
  *
  * Flow:
- * 1. Read attendance for the date (grouped by babysitter + session type)
- * 2. Calculate payment per babysitter using exam rates
- * 3. Upsert payment records (safe to call multiple times for same date)
+ * 1. Queue a payment calculation job
+ * 2. Return 202 Accepted
  *
  * Body: { date: "2025-04-15" } (defaults to today)
  */
@@ -59,61 +59,20 @@ async function generate(req, res, next) {
   try {
     const date = req.body.date || new Date().toISOString().split('T')[0];
 
-    // AttendanceModel.getForPaymentCalculation() — groups by babysitter + session type
-    const attendanceRows = await AttendanceModel.getForPaymentCalculation(date);
-
-    if (attendanceRows.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: `No attendance records found for ${date}. No payments generated.`,
-        data: [],
-      });
-    }
-
-    // Pivot: { babysitterId: { half_day: N, full_day: N } }
-    const byBabysitter = {};
-    for (const row of attendanceRows) {
-      const bid = row.babysitter_id;
-      if (!byBabysitter[bid]) {
-        byBabysitter[bid] = { half_day: 0, full_day: 0 };
-      }
-      byBabysitter[bid][row.session_type] += parseInt(row.child_count, 10);
-    }
-
-    // Generate one payment record per babysitter
-    const results = [];
-    for (const [babysitterId, counts] of Object.entries(byBabysitter)) {
-      const amount_ugx =
-        counts.half_day * RATES.half_day +
-        counts.full_day * RATES.full_day;
-
-      const total_children = counts.half_day + counts.full_day;
-
-      // BabysitterPaymentModel.upsert() — creates or updates, safe to repeat
-      const record = await BabysitterPaymentModel.upsert({
-        babysitter_id: parseInt(babysitterId, 10),
-        date,
-        half_day_children: counts.half_day,
-        full_day_children: counts.full_day,
-        total_children,
-        amount_ugx,
-        created_by: req.user.id,
-      });
-
-      results.push(record);
-    }
-
-      logger.info('Babysitter payments generated', {
+    // Enqueue background payment processing job
+    await addPaymentJob({
       date,
-      count: results.length,
+      userId: req.user.id,
+    });
+
+    logger.info('Babysitter payment generation job enqueued', {
+      date,
       managerId: req.user.id,
     });
 
-
-    return res.status(201).json({
+    return res.status(202).json({
       success: true,
-      message: `${results.length} payment record(s) generated for ${date}.`,
-      data: results,
+      message: `Payment generation job for ${date} has been enqueued.`,
     });
   } catch (error) {
     next(error);

@@ -12,11 +12,13 @@ const swaggerSpec = require('./config/swagger');
 const db = require('./config/database');
 const logger = require('./config/logger');
 const { errorHandler } = require('./middleware/errorHandler');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
 // ── Security & Logging ─────────────────────────────────────────────────────
 app.use(helmet());
+app.use(cookieParser());
 app.use(compression());
 
 // Morgan logs HTTP requests through Winston

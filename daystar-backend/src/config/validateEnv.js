@@ -9,7 +9,8 @@ const logger = require('./logger');
 
 const required = [
   'JWT_SECRET',
-  'JWT_EXPIRES_IN',
+  'JWT_ACCESS_EXPIRES_IN',
+  'JWT_REFRESH_EXPIRES_IN',
   'DB_HOST',
   'DB_PORT',
   'DB_NAME',

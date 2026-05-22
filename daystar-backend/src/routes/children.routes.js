@@ -3,8 +3,8 @@
 const router = require('express').Router();
 const { getAll, getById, getNotCheckedIn, create, update, remove } = require('../controllers/child.controller');
 const { requireAuth, requireManager } = require('../middleware/auth');
-const { validate } = require('../middleware/validate');
-const { createChildSchema, updateChildSchema } = require('../config/schemas');
+const { validate, validateQuery } = require('../middleware/validate');
+const { createChildSchema, updateChildSchema, dateQuerySchema } = require('../config/schemas');
 
 /**
  * Children Routes
@@ -108,7 +108,7 @@ router.use(requireAuth);
 
 // GET /api/children?search=&session_type=&is_active=
 // Both roles can view children list
-router.get('/', getAll);
+router.get('/', validateQuery(dateQuerySchema), getAll);
 
 // GET /api/children/not-checked-in?date=2025-04-15
 // Must be defined BEFORE /:id to avoid conflict
@@ -120,9 +120,6 @@ router.get('/:id', getById);
 
 // POST /api/children — manager only
 router.post('/', requireManager, validate(createChildSchema), create);
-
-// GET /api/children?session_type=full_day — filter by session type
-router.get('/', validateQuery(dateQuerySchema), getAll);
 
 // PUT /api/children/:id — manager only
 router.put('/:id', requireManager, validate(updateChildSchema), update);

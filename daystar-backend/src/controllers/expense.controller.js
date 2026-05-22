@@ -1,7 +1,8 @@
 
 
-const { ExpenseModel, BudgetModel, UserModel, NotificationModel } = require('../models');
+const { ExpenseModel, BudgetModel, UserModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
+const { addNotificationJob } = require('../config/queue');
 
 /**
  * GET /api/expenses
@@ -62,8 +63,8 @@ async function create(req, res, next) {
     if (budgetStatus.exceeded) {
       const manager = await UserModel.findManager();
       if (manager) {
-        // NotificationModel.notify() — stores in-app notification
-        await NotificationModel.notify({
+        // Queue the notification instead of saving synchronously
+        await addNotificationJob({
           type: 'budget_exceeded',
           title: `Budget exceeded: ${data.category.replace(/_/g, ' ')}`,
           message: `The ${data.category.replace(/_/g, ' ')} budget of UGX ${budgetStatus.budget.amount_ugx.toLocaleString()} has been exceeded. Total spent: UGX ${budgetStatus.newTotal.toLocaleString()}.`,
