@@ -54,9 +54,28 @@ const options = {
       schemas: {
         Error: {
           type: 'object',
+          required: ['success', 'message'],
           properties: {
             success: { type: 'boolean', example: false },
             message: { type: 'string', example: 'Error message here' },
+          },
+        },
+        ValidationError: {
+          type: 'object',
+          required: ['success', 'message', 'errors'],
+          properties: {
+            success: { type: 'boolean', example: false },
+            message: { type: 'string', example: 'Validation failed' },
+            errors: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  field: { type: 'string', example: 'start' },
+                  message: { type: 'string', example: 'Date must be in YYYY-MM-DD format' },
+                },
+              },
+            },
           },
         },
         Success: {
@@ -64,6 +83,16 @@ const options = {
           properties: {
             success: { type: 'boolean', example: true },
             message: { type: 'string', example: 'Operation successful' },
+          },
+        },
+        Pagination: {
+          type: 'object',
+          properties: {
+            page: { type: 'integer', example: 1 },
+            limit: { type: 'integer', example: 20 },
+            pages: { type: 'integer', example: 3 },
+            hasNext: { type: 'boolean', example: true },
+            hasPrev: { type: 'boolean', example: false },
           },
         },
         Child: {
@@ -152,6 +181,36 @@ const options = {
             expense_date: { type: 'string', format: 'date', example: '2026-05-20' },
           },
         },
+        Budget: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            category: { type: 'string', enum: ['babysitter_salary', 'toys_materials', 'maintenance', 'utilities', 'other'] },
+            period: { type: 'string', enum: ['monthly', 'weekly'] },
+            amount_ugx: { type: 'integer', example: 150000 },
+            start_date: { type: 'string', format: 'date', example: '2026-05-01' },
+            end_date: { type: 'string', format: 'date', example: '2026-05-31' },
+            spent_ugx: { type: 'integer', example: 85000 },
+            remaining_ugx: { type: 'integer', example: 65000 },
+            percent_used: { type: 'integer', example: 57 },
+            status: { type: 'string', enum: ['on_track', 'near_limit', 'exceeded'] },
+          },
+        },
+        BabysitterPayment: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            babysitter_id: { type: 'integer', example: 1 },
+            date: { type: 'string', format: 'date', example: '2026-05-20' },
+            half_day_children: { type: 'integer', example: 2 },
+            full_day_children: { type: 'integer', example: 4 },
+            total_children: { type: 'integer', example: 6 },
+            amount_ugx: { type: 'integer', example: 24000 },
+            is_cleared: { type: 'boolean', example: false },
+            first_name: { type: 'string', example: 'Grace' },
+            last_name: { type: 'string', example: 'Nakato' },
+          },
+        },
         Incident: {
           type: 'object',
           properties: {
@@ -162,6 +221,72 @@ const options = {
             severity:     { type: 'string', enum: ['low', 'medium', 'high'] },
             is_resolved:  { type: 'boolean', example: false },
             child_name:   { type: 'string', example: 'Aisha Kamara' },
+            babysitter_first_name: { type: 'string', example: 'Grace' },
+            babysitter_last_name: { type: 'string', example: 'Nakato' },
+            resolution_notes: { type: 'string', nullable: true, example: 'Parent notified and child monitored.' },
+            resolved_at: { type: 'string', nullable: true, format: 'date-time' },
+          },
+        },
+        DashboardToday: {
+          type: 'object',
+          properties: {
+            date: { type: 'string', format: 'date', example: '2026-05-20' },
+            attendance: { type: 'object' },
+            income_today_ugx: { type: 'integer', example: 80000 },
+            expenses_today_ugx: { type: 'integer', example: 30000 },
+            net_today_ugx: { type: 'integer', example: 50000 },
+            uncleared_payments: { type: 'object' },
+            unresolved_incidents: { type: 'integer', example: 2 },
+            unread_notifications: { type: 'integer', example: 3 },
+          },
+        },
+        FinancialReport: {
+          type: 'object',
+          properties: {
+            period: {
+              type: 'object',
+              properties: {
+                start: { type: 'string', format: 'date', example: '2026-05-01' },
+                end: { type: 'string', format: 'date', example: '2026-05-31' },
+              },
+            },
+            summary: {
+              type: 'object',
+              properties: {
+                total_income_ugx: { type: 'integer', example: 550000 },
+                total_expenses_ugx: { type: 'integer', example: 225000 },
+                net_ugx: { type: 'integer', example: 325000 },
+                profit_margin_percent: { type: 'integer', example: 59 },
+              },
+            },
+            income_by_day: { type: 'array', items: { type: 'object' } },
+            expenses_by_category: { type: 'array', items: { type: 'object' } },
+          },
+        },
+        AttendanceReport: {
+          type: 'object',
+          properties: {
+            period: { type: 'object' },
+            summary: {
+              type: 'object',
+              properties: {
+                total_sessions: { type: 'integer', example: 120 },
+                days_tracked: { type: 'integer', example: 20 },
+                average_daily_attendance: { type: 'integer', example: 6 },
+              },
+            },
+            daily: { type: 'array', items: { type: 'object' } },
+          },
+        },
+        Notification: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            type: { type: 'string', example: 'incident_reported' },
+            title: { type: 'string', example: 'Incident reported: Aisha Kamara' },
+            message: { type: 'string', example: 'A low severity incident was reported.' },
+            is_read: { type: 'boolean', example: false },
+            created_at: { type: 'string', format: 'date-time' },
           },
         },
       },

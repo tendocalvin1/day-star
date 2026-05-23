@@ -90,10 +90,11 @@ app.get('/health', async (req, res) => {
       uptime: `${Math.floor(process.uptime())}s`,
     });
   } catch (err) {
+    const isProduction = process.env.NODE_ENV === 'production';
     res.status(503).json({
       status: 'unhealthy',
       database: 'disconnected',
-      error: err.message,
+      ...(isProduction ? {} : { error: err.message }),
     });
   }
 });

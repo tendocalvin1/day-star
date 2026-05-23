@@ -35,10 +35,30 @@ const { loginSchema, changePasswordSchema } = require('../config/schemas');
  *     responses:
  *       200:
  *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 token: { type: string, example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... }
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: integer, example: 1 }
+ *                     email: { type: string, example: manager@daystar.ug }
+ *                     role: { type: string, enum: [manager, babysitter], example: manager }
+ *                     babysitter_id: { type: integer, nullable: true, example: null }
  *       401:
- *         description: Invalid credentials
+ *         description: Invalid credentials or inactive account
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
  *       422:
  *         description: Validation failed
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/ValidationError' }
  */
 router.post('/login', validate(loginSchema), login);
 
@@ -48,11 +68,16 @@ router.post('/login', validate(loginSchema), login);
  *   get:
  *     summary: Get current authenticated user
  *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Current user details
  *       401:
  *         description: Not authenticated
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
  */
 router.get('/me', requireAuth, getMe);
 
@@ -62,6 +87,8 @@ router.get('/me', requireAuth, getMe);
  *   put:
  *     summary: Change current user password
  *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -81,6 +108,11 @@ router.get('/me', requireAuth, getMe);
  *         description: Password changed successfully
  *       401:
  *         description: Current password incorrect
+ *       422:
+ *         description: Validation failed, including same current and new password
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/ValidationError' }
  */
 router.put('/change-password', requireAuth, validate(changePasswordSchema), changePassword);
 
