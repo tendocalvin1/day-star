@@ -8,33 +8,121 @@ class BabysitterModel extends BaseModel {
   }
 
   /**
-   * Get all active babysitters with computed age
+   * Search active babysitters with computed age.
    */
-    async findAllActive({ search, limit = 20, offset = 0 } = {}) {
-  let query = this.db(this.table)
-    .select(
-      'id', 'first_name', 'last_name', 'email', 'phone',
-      'nin', 'date_of_birth', 'next_of_kin_name',
-      'next_of_kin_phone', 'is_active', 'created_at'
-    )
-    .where({ is_active: true });
+  async searchActive(filters = {}) {
+    const { limit = 20, offset = 0 } = filters;
+    const query = this.buildSearchQuery(filters);
 
-  if (search) {
-    query = query.where(function() {
-      this.whereILike('first_name', `%${search}%`)
-          .orWhereILike('last_name', `%${search}%`)
-          .orWhereILike('phone', `%${search}%`)
-          .orWhereILike('nin', `%${search}%`);
-    });
+    this.applySort(query, filters.sort_by, filters.sort_order);
+
+    const rows = await query.limit(limit).offset(offset);
+    return rows.map((b) => ({ ...b, age: calculateAge(b.date_of_birth) }));
   }
 
-  const rows = await query
-    .orderBy('first_name')
-    .limit(limit)
-    .offset(offset);
+  async countSearchActive(filters = {}) {
+    const result = await this.buildSearchQuery(filters)
+      .clearSelect()
+      .clearOrder()
+      .count('id as count')
+      .first();
 
-  return rows.map((b) => ({ ...b, age: calculateAge(b.date_of_birth) }));
-}
+    return parseInt(result.count, 10);
+  }
+
+  buildSearchQuery({
+    search,
+    name,
+    skills,
+    availability,
+    min_experience,
+    max_experience,
+    location,
+  } = {}) {
+    const query = this.db(this.table)
+      .select(
+        'id',
+        'first_name',
+        'last_name',
+        'email',
+        'phone',
+        'nin',
+        'date_of_birth',
+        'skills',
+        'availability',
+        'years_experience',
+        'location',
+        'next_of_kin_name',
+        'next_of_kin_phone',
+        'is_active',
+        'created_at'
+      )
+      .where({ is_active: true });
+
+    if (search) {
+      query.andWhere((builder) => {
+        builder
+          .whereILike('first_name', `%${search}%`)
+          .orWhereILike('last_name', `%${search}%`)
+          .orWhereRaw("concat(first_name, ' ', last_name) ILIKE ?", [`%${search}%`])
+          .orWhereILike('phone', `%${search}%`)
+          .orWhereILike('nin', `%${search}%`)
+          .orWhereILike('location', `%${search}%`);
+      });
+    }
+
+    if (name) {
+      query.andWhere((builder) => {
+        builder
+          .whereILike('first_name', `%${name}%`)
+          .orWhereILike('last_name', `%${name}%`)
+          .orWhereRaw("concat(first_name, ' ', last_name) ILIKE ?", [`%${name}%`]);
+      });
+    }
+
+    if (skills?.length) {
+      query.whereRaw('skills && ?::text[]', [skills]);
+    }
+
+    if (availability?.length) {
+      query.whereRaw('availability && ?::text[]', [availability]);
+    }
+
+    if (min_experience !== undefined) {
+      query.where('years_experience', '>=', min_experience);
+    }
+
+    if (max_experience !== undefined) {
+      query.where('years_experience', '<=', max_experience);
+    }
+
+    if (location) {
+      query.whereILike('location', `%${location}%`);
+    }
+
+    return query;
+  }
+
+  applySort(query, sortBy = 'name', sortOrder = 'asc') {
+    const direction = sortOrder === 'desc' ? 'desc' : 'asc';
+
+    if (sortBy === 'years_experience') {
+      query.orderBy('years_experience', direction).orderBy('first_name', 'asc');
+      return;
+    }
+
+    if (sortBy === 'created_at') {
+      query.orderBy('created_at', direction).orderBy('id', 'asc');
+      return;
+    }
+
+    if (sortBy === 'location') {
+      query.orderBy('location', direction).orderBy('first_name', 'asc');
+      return;
+    }
+
+    query.orderBy('first_name', direction).orderBy('last_name', direction).orderBy('id', 'asc');
+  }
 
   /**
    * Find babysitter by ID with their linked user account

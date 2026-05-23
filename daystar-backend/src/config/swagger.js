@@ -98,6 +98,18 @@ const options = {
             phone:             { type: 'string', example: '0772123456' },
             nin:               { type: 'string', example: 'CM97100200001' },
             date_of_birth:     { type: 'string', format: 'date', example: '1998-05-14' },
+            skills: {
+              type: 'array',
+              items: { type: 'string' },
+              example: ['first aid', 'infant care'],
+            },
+            availability: {
+              type: 'array',
+              items: { type: 'string' },
+              example: ['weekdays', 'full_day'],
+            },
+            years_experience:  { type: 'integer', example: 4 },
+            location:          { type: 'string', example: 'Kampala Central' },
             next_of_kin_name:  { type: 'string', example: 'Sarah Nakato' },
             next_of_kin_phone: { type: 'string', example: '0701234567' },
             is_active:         { type: 'boolean', example: true },

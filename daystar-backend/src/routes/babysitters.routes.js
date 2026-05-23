@@ -3,8 +3,12 @@
 const router = require('express').Router();
 const { getAll, getById, create, update, remove } = require('../controllers/babysitter.controller');
 const { requireAuth, requireManager } = require('../middleware/auth');
-const { validate } = require('../middleware/validate');
-const { createBabysitterSchema, updateBabysitterSchema } = require('../config/schemas');
+const { validate, validateQuery } = require('../middleware/validate');
+const {
+  createBabysitterSchema,
+  updateBabysitterSchema,
+  babysitterSearchQuerySchema,
+} = require('../config/schemas');
 
 /**
  * Babysitter Routes
@@ -24,9 +28,56 @@ const { createBabysitterSchema, updateBabysitterSchema } = require('../config/sc
  * @swagger
  * /api/babysitters:
  *   get:
- *     summary: Get all active babysitters
+ *     summary: Search active babysitters
  *     tags: [Babysitters]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search name, phone, NIN, or location
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: skills
+ *         schema:
+ *           type: string
+ *           example: first aid,infant care
+ *         description: Comma-separated skill filters. Matches any supplied skill.
+ *       - in: query
+ *         name: availability
+ *         schema:
+ *           type: string
+ *           example: weekdays,full_day
+ *         description: Comma-separated availability filters. Matches any supplied value.
+ *       - in: query
+ *         name: min_experience
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *       - in: query
+ *         name: max_experience
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *       - in: query
+ *         name: location
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sort_by
+ *         schema:
+ *           type: string
+ *           enum: [name, years_experience, created_at, location]
+ *       - in: query
+ *         name: sort_order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
  *       - in: query
  *         name: page
  *         schema:
@@ -37,7 +88,9 @@ const { createBabysitterSchema, updateBabysitterSchema } = require('../config/sc
  *           type: integer
  *     responses:
  *       200:
- *         description: List of babysitters with computed ages
+ *         description: Paginated babysitter search results with computed ages
+ *       422:
+ *         description: Invalid search filters
  */
 
 
@@ -81,6 +134,16 @@ const { createBabysitterSchema, updateBabysitterSchema } = require('../config/sc
  *               phone:             { type: string, example: '0772123456' }
  *               nin:               { type: string, example: CM97100200001 }
  *               date_of_birth:     { type: string, format: date, example: '1998-05-14' }
+ *               skills:
+ *                 type: array
+ *                 items: { type: string }
+ *                 example: [first aid, infant care]
+ *               availability:
+ *                 type: array
+ *                 items: { type: string }
+ *                 example: [weekdays, full_day]
+ *               years_experience:  { type: integer, example: 4 }
+ *               location:          { type: string, example: Kampala Central }
  *               next_of_kin_name:  { type: string, example: Sarah Nakato }
  *               next_of_kin_phone: { type: string, example: '0701234567' }
  *               create_account:    { type: boolean, example: true }
@@ -136,7 +199,7 @@ const { createBabysitterSchema, updateBabysitterSchema } = require('../config/sc
 router.use(requireAuth, requireManager);
 
 // GET /api/babysitters
-router.get('/', getAll);
+router.get('/', validateQuery(babysitterSearchQuerySchema), getAll);
 
 // GET /api/babysitters/:id
 router.get('/:id', getById);

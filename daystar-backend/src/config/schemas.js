@@ -21,6 +21,17 @@ const ugandaPhone = z
   .string()
   .regex(/^(0|\+256)[0-9]{9}$/, 'Enter a valid Uganda phone number (e.g. 0712345678)');
 
+const csvList = z.preprocess((value) => {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return value;
+}, z.array(z.string().min(2).max(50).trim()).max(20));
+
 // ── Auth ───────────────────────────────────────────────────────────────────
 
 const loginSchema = z.object({
@@ -37,6 +48,10 @@ const createBabysitterSchema = z.object({
   phone: ugandaPhone,
   nin: z.string().min(8).max(20).trim().toUpperCase(),
   date_of_birth: isoDate,
+  skills: z.array(z.string().min(2).max(50).trim()).max(20).optional().default([]),
+  availability: z.array(z.string().min(2).max(50).trim()).max(20).optional().default([]),
+  years_experience: z.number().int().min(0).max(50).optional().default(0),
+  location: z.string().min(2).max(150).trim().optional().nullable(),
   next_of_kin_name: z.string().min(2).max(200).trim(),
   next_of_kin_phone: ugandaPhone,
   // Optional: create a user account for this babysitter
@@ -46,6 +61,26 @@ const createBabysitterSchema = z.object({
 });
 
 const updateBabysitterSchema = createBabysitterSchema.partial();
+
+const babysitterSearchQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(20),
+  search: z.string().trim().min(2).max(100).optional(),
+  name: z.string().trim().min(2).max(100).optional(),
+  skills: csvList.optional(),
+  availability: csvList.optional(),
+  min_experience: z.coerce.number().int().min(0).max(50).optional(),
+  max_experience: z.coerce.number().int().min(0).max(50).optional(),
+  location: z.string().trim().min(2).max(150).optional(),
+  sort_by: z.enum(['name', 'years_experience', 'created_at', 'location']).optional().default('name'),
+  sort_order: z.enum(['asc', 'desc']).optional().default('asc'),
+}).refine((data) => {
+  if (data.min_experience === undefined || data.max_experience === undefined) return true;
+  return data.min_experience <= data.max_experience;
+}, {
+  message: 'min_experience must be less than or equal to max_experience',
+  path: ['min_experience'],
+});
 
 // ── Children ───────────────────────────────────────────────────────────────
 
@@ -163,6 +198,7 @@ module.exports = {
   loginSchema,
   createBabysitterSchema,
   updateBabysitterSchema,
+  babysitterSearchQuerySchema,
   createChildSchema,
   updateChildSchema,
   checkInSchema,
