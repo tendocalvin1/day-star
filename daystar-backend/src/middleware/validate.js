@@ -34,4 +34,15 @@ function validateQuery(schema) {
   };
 }
 
-module.exports = { validate, validateQuery };
+function validateParams(schema) {
+  return (req, res, next) => {
+    try {
+      req.validatedParams = schema.parse(req.params);
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+
+module.exports = { validate, validateQuery, validateParams };

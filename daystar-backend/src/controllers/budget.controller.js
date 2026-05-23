@@ -2,6 +2,7 @@
 
 const { BudgetModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
+const auditService = require('../services/auditService');
 
 /**
  * GET /api/budgets
@@ -54,6 +55,16 @@ async function create(req, res, next) {
       created_by: req.user.id,
     });
 
+    await auditService.log({
+      actorId: req.user.id,
+      userEmail: req.user.email,
+      action: 'budget.created',
+      entityType: 'budget',
+      entityId: budget.id,
+      newValues: budget,
+      req,
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Budget created successfully.',
@@ -76,6 +87,18 @@ async function update(req, res, next) {
     // BaseModel.updateById() — updates and returns updated record
     const updated = await BudgetModel.updateById(req.params.id, req.validatedData);
 
+    await auditService.log({
+      actorId: req.user.id,
+      userEmail: req.user.email,
+      action: 'budget.updated',
+      entityType: 'budget',
+      entityId: updated.id,
+      oldValues: existing,
+      newValues: updated,
+      metadata: { changedFields: Object.keys(req.validatedData) },
+      req,
+    });
+
     return res.status(200).json({
       success: true,
       message: 'Budget updated successfully.',
@@ -96,6 +119,16 @@ async function remove(req, res, next) {
     if (!existing) throw new AppError('Budget not found.', 404);
 
     // BaseModel.deleteById() — hard delete is fine for budgets
+    await auditService.log({
+      actorId: req.user.id,
+      userEmail: req.user.email,
+      action: 'budget.deleted',
+      entityType: 'budget',
+      entityId: existing.id,
+      oldValues: existing,
+      req,
+    });
+
     await BudgetModel.deleteById(req.params.id);
 
     return res.status(200).json({

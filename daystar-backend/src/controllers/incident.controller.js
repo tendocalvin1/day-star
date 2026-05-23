@@ -3,6 +3,7 @@
 const { IncidentModel, ChildModel, BabysitterModel, UserModel, NotificationModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 const logger = require('../config/logger');
+const auditService = require('../services/auditService');
 
 /**
  * GET /api/incidents
@@ -12,11 +13,11 @@ const logger = require('../config/logger');
  */
 async function getAll(req, res, next) {
   try {
-    const { is_resolved } = req.query;
+    const { is_resolved } = req.validatedQuery || req.query;
 
     const filters = {
       babysitter_id: req.user.role === 'babysitter' ? req.user.babysitter_id : undefined,
-      is_resolved: is_resolved !== undefined ? is_resolved === 'true' : undefined,
+      is_resolved,
     };
 
     const records = await IncidentModel.findWithDetails(filters);
@@ -52,6 +53,17 @@ async function create(req, res, next) {
       description,
       severity,
       is_resolved: false,
+    });
+
+    await auditService.log({
+      actorId: req.user.id,
+      userEmail: req.user.email,
+      action: 'incident.created',
+      entityType: 'incident',
+      entityId: incident.id,
+      newValues: incident,
+      metadata: { childId: child_id, severity },
+      req,
     });
 
     // Notify manager
@@ -103,6 +115,17 @@ async function resolve(req, res, next) {
     const updated = await IncidentModel.resolve(id, {
       resolution_notes: req.validatedData.resolution_notes,
       resolved_by: req.user.id,
+    });
+
+    await auditService.log({
+      actorId: req.user.id,
+      userEmail: req.user.email,
+      action: 'incident.resolved',
+      entityType: 'incident',
+      entityId: updated.id,
+      oldValues: incident,
+      newValues: updated,
+      req,
     });
 
     return res.status(200).json({

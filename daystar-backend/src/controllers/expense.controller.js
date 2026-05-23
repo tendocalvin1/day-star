@@ -3,6 +3,7 @@
 const { ExpenseModel, BudgetModel, UserModel, NotificationModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 const logger = require('../config/logger');
+const auditService = require('../services/auditService');
 
 /**
  * GET /api/expenses
@@ -11,7 +12,7 @@ const logger = require('../config/logger');
  */
 async function getAll(req, res, next) {
   try {
-    const { category, start, end } = req.query;
+    const { category, start, end } = req.validatedQuery || req.query;
 
     const records = await ExpenseModel.findWithFilters({ category, start, end });
 
@@ -53,6 +54,17 @@ async function create(req, res, next) {
     const record = await ExpenseModel.create({
       ...data,
       created_by: req.user.id,
+    });
+
+    await auditService.log({
+      actorId: req.user.id,
+      userEmail: req.user.email,
+      action: 'expense.created',
+      entityType: 'expense',
+      entityId: record.id,
+      newValues: record,
+      metadata: { budgetAlert: budgetStatus.exceeded ? 'exceeded' : budgetStatus.nearLimit ? 'near_limit' : null },
+      req,
     });
 
     // Notify manager if budget exceeded
@@ -114,6 +126,18 @@ async function update(req, res, next) {
 
     const updated = await ExpenseModel.updateById(req.params.id, req.validatedData);
 
+    await auditService.log({
+      actorId: req.user.id,
+      userEmail: req.user.email,
+      action: 'expense.updated',
+      entityType: 'expense',
+      entityId: updated.id,
+      oldValues: existing,
+      newValues: updated,
+      metadata: { changedFields: Object.keys(req.validatedData) },
+      req,
+    });
+
     return res.status(200).json({
       success: true,
       message: 'Expense updated successfully.',
@@ -131,6 +155,16 @@ async function remove(req, res, next) {
   try {
     const existing = await ExpenseModel.findById(req.params.id);
     if (!existing) throw new AppError('Expense record not found.', 404);
+
+    await auditService.log({
+      actorId: req.user.id,
+      userEmail: req.user.email,
+      action: 'expense.deleted',
+      entityType: 'expense',
+      entityId: existing.id,
+      oldValues: existing,
+      req,
+    });
 
     await ExpenseModel.deleteById(req.params.id);
 

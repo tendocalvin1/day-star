@@ -193,6 +193,53 @@ const dateRangeQuerySchema = z.object({
     .optional(),
 });
 
+const idParamSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
+
+const optionalBooleanQuery = z
+  .enum(['true', 'false'])
+  .transform((value) => value === 'true')
+  .optional();
+
+const incomeQuerySchema = z.object({
+  start: isoDate.optional(),
+  end: isoDate.optional(),
+  child_id: z.coerce.number().int().positive().optional(),
+}).refine((data) => {
+  if (!data.start || !data.end) return true;
+  return data.end >= data.start;
+}, {
+  message: 'end must be after or equal to start',
+  path: ['end'],
+});
+
+const expenseQuerySchema = z.object({
+  category: z.enum(expenseCategories).optional(),
+  start: isoDate.optional(),
+  end: isoDate.optional(),
+}).refine((data) => {
+  if (!data.start || !data.end) return true;
+  return data.end >= data.start;
+}, {
+  message: 'end must be after or equal to start',
+  path: ['end'],
+});
+
+const paymentQuerySchema = z.object({
+  date: isoDate.optional(),
+  babysitter_id: z.coerce.number().int().positive().optional(),
+  is_cleared: optionalBooleanQuery,
+});
+
+const generatePaymentsSchema = z.object({
+  date: isoDate.optional(),
+});
+
+const incidentQuerySchema = z.object({
+  is_resolved: optionalBooleanQuery,
+});
+
 
 module.exports = {
   loginSchema,
@@ -212,4 +259,10 @@ module.exports = {
   dateRangeSchema,
   dateQuerySchema,
   dateRangeQuerySchema,
+  idParamSchema,
+  incomeQuerySchema,
+  expenseQuerySchema,
+  paymentQuerySchema,
+  generatePaymentsSchema,
+  incidentQuerySchema,
 };

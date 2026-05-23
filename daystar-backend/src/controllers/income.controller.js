@@ -11,7 +11,7 @@ const auditService = require('../services/auditService');
  */
 async function getAll(req, res, next) {
   try {
-    const { start, end, child_id } = req.query;
+    const { start, end, child_id } = req.validatedQuery || req.query;
     const records = await IncomeModel.findWithFilters({ start, end, child_id });
     const totalAmount = records.reduce((sum, r) => sum + r.amount_ugx, 0);
 
