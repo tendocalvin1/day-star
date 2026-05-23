@@ -1,3 +1,9 @@
+const router = require('express').Router();
+const { login, getMe, changePassword } = require('../controllers/auth.controller');
+const { requireAuth } = require('../middleware/auth');
+const { validate } = require('../middleware/validate');
+const { loginSchema } = require('../config/schemas');
+
 /**
  * @swagger
  * tags:
@@ -29,37 +35,12 @@
  *     responses:
  *       200:
  *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 token:
- *                   type: string
- *                   example: eyJhbGciOiJIUzI1NiIs...
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:    { type: integer, example: 1 }
- *                     email: { type: string, example: manager@daystar.ug }
- *                     role:  { type: string, example: manager }
  *       401:
  *         description: Invalid credentials
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  *       422:
  *         description: Validation failed
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-
+router.post('/login', validate(loginSchema), login);
 
 /**
  * @swagger
@@ -73,7 +54,7 @@
  *       401:
  *         description: Not authenticated
  */
-// router.get('/me', requireAuth, getMe);
+router.get('/me', requireAuth, getMe);
 
 /**
  * @swagger
@@ -101,25 +82,6 @@
  *       401:
  *         description: Current password incorrect
  */
-
-const router = require('express').Router();
-const { login, refresh, logout, getMe, changePassword } = require('../controllers/auth.controller');
-const { requireAuth } = require('../middleware/auth');
-const { validate } = require('../middleware/validate');
-const { loginSchema } = require('../config/schemas');
-
-// POST /api/auth/login
-router.post('/login', validate(loginSchema), login);
-
-// POST /api/auth/refresh
-router.post('/refresh', refresh);
-
-// POST /api/auth/logout
-router.post('/logout', logout);
-
-// GET /api/auth/me
-router.get('/me', requireAuth, getMe);
-
 router.put('/change-password', requireAuth, changePassword);
 
 module.exports = router;
