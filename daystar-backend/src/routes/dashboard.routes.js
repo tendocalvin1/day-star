@@ -36,6 +36,8 @@ const { dateRangeQuerySchema } = require('../config/schemas');
  *     summary: Get today's complete operational dashboard
  *     tags: [Dashboard]
  *     description: Returns attendance, income, expenses, alerts in one request using parallel queries
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Today's dashboard data
@@ -46,15 +48,11 @@ const { dateRangeQuerySchema } = require('../config/schemas');
  *               properties:
  *                 success: { type: boolean }
  *                 data:
- *                   type: object
- *                   properties:
- *                     date:               { type: string }
- *                     attendance:         { type: object }
- *                     income_today_ugx:   { type: integer }
- *                     expenses_today_ugx: { type: integer }
- *                     net_today_ugx:      { type: integer }
- *                     uncleared_payments: { type: object }
- *                     unresolved_incidents: { type: integer }
+ *                   $ref: '#/components/schemas/DashboardToday'
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Manager role required
  */
 
 
@@ -64,6 +62,9 @@ const { dateRangeQuerySchema } = require('../config/schemas');
  *   get:
  *     summary: Get financial report for a date range
  *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Manager-only financial report with income, expenses, net amount, margin, and chart-ready breakdowns.
  *     parameters:
  *       - in: query
  *         name: start
@@ -82,6 +83,19 @@ const { dateRangeQuerySchema } = require('../config/schemas');
  *     responses:
  *       200:
  *         description: Income vs expense summary with daily and category breakdowns
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data: { $ref: '#/components/schemas/FinancialReport' }
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Manager role required
+ *       422:
+ *         description: Invalid date range
  */
 
 
@@ -91,6 +105,9 @@ const { dateRangeQuerySchema } = require('../config/schemas');
  *   get:
  *     summary: Export financial report as CSV
  *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Manager-only CSV export for finance data in a date range.
  *     parameters:
  *       - in: query
  *         name: start
@@ -111,6 +128,10 @@ const { dateRangeQuerySchema } = require('../config/schemas');
  *           text/csv:
  *             schema:
  *               type: string
+ *       403:
+ *         description: Manager role required
+ *       422:
+ *         description: Invalid date range
  */
 
 
@@ -121,6 +142,9 @@ const { dateRangeQuerySchema } = require('../config/schemas');
  *   get:
  *     summary: Get attendance report for a date range
  *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Manager-only attendance trend report with daily totals and session breakdowns.
  *     parameters:
  *       - in: query
  *         name: start
@@ -137,6 +161,17 @@ const { dateRangeQuerySchema } = require('../config/schemas');
  *     responses:
  *       200:
  *         description: Daily attendance counts and summary
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data: { $ref: '#/components/schemas/AttendanceReport' }
+ *       403:
+ *         description: Manager role required
+ *       422:
+ *         description: Invalid date range
  */
 
 /**
@@ -145,9 +180,24 @@ const { dateRangeQuerySchema } = require('../config/schemas');
  *   get:
  *     summary: Get notifications and mark them as read
  *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Available to authenticated managers and babysitters. Returns recent notifications and marks them as read.
  *     responses:
  *       200:
  *         description: List of notifications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 count: { type: integer, example: 2 }
+ *                 data:
+ *                   type: array
+ *                   items: { $ref: '#/components/schemas/Notification' }
+ *       401:
+ *         description: Missing or invalid token
  */
 router.use(requireAuth);
 

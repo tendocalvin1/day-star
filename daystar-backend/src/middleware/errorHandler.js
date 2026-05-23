@@ -23,6 +23,7 @@ class AppError extends Error {
 function errorHandler(err, req, res, next) {
   let statusCode = err.statusCode || 500;
   let message = err.message || 'Internal server error';
+  const isDev = process.env.NODE_ENV === 'development';
 
   // Handle known DB constraint errors (PostgreSQL)
   if (err.code === '23505') {
@@ -66,11 +67,19 @@ function errorHandler(err, req, res, next) {
     isOperational: err.isOperational || false,
   });
 
-  const isDev = process.env.NODE_ENV === 'development';
+  if (!isDev && statusCode >= 500) {
+    message = 'Internal server error';
+  }
 
   res.status(statusCode).json({
     success: false,
     message,
+    ...(isDev && {
+      error: {
+        name: err.name,
+        code: err.code,
+      },
+    }),
     ...(isDev && { stack: err.stack }),
   });
 }
