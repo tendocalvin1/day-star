@@ -39,6 +39,10 @@ exports.seed = async function (knex) {
         phone: '0772123456',
         nin: 'CM97100200001',
         date_of_birth: '1998-05-14', // Age: 26 ✓
+        skills: ['first aid', 'infant care', 'storytelling'],
+        availability: ['weekdays', 'full_day'],
+        years_experience: 4,
+        location: 'Kampala Central',
         next_of_kin_name: 'Sarah Nakato',
         next_of_kin_phone: '0701234567',
         is_active: true,
@@ -50,6 +54,10 @@ exports.seed = async function (knex) {
         phone: '0782345678',
         nin: 'CM95080300002',
         date_of_birth: '1995-08-22', // Age: 29 ✓
+        skills: ['special needs', 'outdoor play', 'meal prep'],
+        availability: ['weekdays', 'half_day'],
+        years_experience: 6,
+        location: 'Makindye',
         next_of_kin_name: 'Moses Ssemakula',
         next_of_kin_phone: '0712345678',
         is_active: true,
@@ -61,6 +69,10 @@ exports.seed = async function (knex) {
         phone: '0752456789',
         nin: 'CF00030400003',
         date_of_birth: '2000-03-10', // Age: 25 ✓
+        skills: ['first aid', 'arts and crafts', 'music'],
+        availability: ['weekends', 'full_day'],
+        years_experience: 3,
+        location: 'Ntinda',
         next_of_kin_name: 'Joan Auma',
         next_of_kin_phone: '0723456789',
         is_active: true,

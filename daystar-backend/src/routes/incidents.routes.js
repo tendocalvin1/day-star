@@ -1,8 +1,13 @@
 const router = require('express').Router();
 const { getAll, create, resolve } = require('../controllers/incident.controller');
 const { requireAuth, requireManager } = require('../middleware/auth');
-const { validate } = require('../middleware/validate');
-const { createIncidentSchema, resolveIncidentSchema } = require('../config/schemas');
+const { validate, validateQuery, validateParams } = require('../middleware/validate');
+const {
+  createIncidentSchema,
+  resolveIncidentSchema,
+  incidentQuerySchema,
+  idParamSchema,
+} = require('../config/schemas');
 
 /**
  * Incident Routes
@@ -19,13 +24,13 @@ router.use(requireAuth);
 
 // GET /api/incidents?is_resolved=false
 // Manager: all incidents | Babysitter: own incidents only (enforced in controller)
-router.get('/', getAll);
+router.get('/', validateQuery(incidentQuerySchema), getAll);
 
 // POST /api/incidents
 // Babysitter files a report — controller enforces babysitter role
 router.post('/', validate(createIncidentSchema), create);
 
 // PUT /api/incidents/:id/resolve — manager only
-router.put('/:id/resolve', requireManager, validate(resolveIncidentSchema), resolve);
+router.put('/:id/resolve', requireManager, validateParams(idParamSchema), validate(resolveIncidentSchema), resolve);
 
 module.exports = router;

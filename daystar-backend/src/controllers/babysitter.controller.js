@@ -5,6 +5,7 @@ const { BabysitterModel, UserModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 const { validateBabysitterAge } = require('../services/ageUtils');
 const { getPagination, paginatedResponse } = require('../utils/pagination');
+const auditService = require('../services/auditService');
 
 /**
  * GET /api/babysitters
@@ -12,9 +13,10 @@ const { getPagination, paginatedResponse } = require('../utils/pagination');
  */
 async function getAll(req, res, next) {
   try {
-    const { page, limit, offset } = getPagination(req.query);
-    const babysitters = await BabysitterModel.findAllActive({ limit, offset });
-    const total = await BabysitterModel.countWhere({ is_active: true });
+    const filters = req.validatedQuery || req.query;
+    const { page, limit, offset } = getPagination(filters);
+    const babysitters = await BabysitterModel.searchActive({ ...filters, limit, offset });
+    const total = await BabysitterModel.countSearchActive(filters);
     return paginatedResponse(res, babysitters, total, page, limit);
   } catch (error) {
     next(error);
@@ -82,6 +84,17 @@ async function create(req, res, next) {
       accountData
     );
 
+    await auditService.log({
+      actorId: req.user.id,
+      userEmail: req.user.email,
+      action: 'babysitter.created',
+      entityType: 'babysitter',
+      entityId: babysitter.id,
+      newValues: babysitter,
+      metadata: { createdAccount: Boolean(userAccount) },
+      req,
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Babysitter registered successfully.',
@@ -117,6 +130,18 @@ async function update(req, res, next) {
     // BaseModel.updateById() — updates and returns the full updated record
     const updated = await BabysitterModel.updateById(id, updates);
 
+    await auditService.log({
+      actorId: req.user.id,
+      userEmail: req.user.email,
+      action: 'babysitter.updated',
+      entityType: 'babysitter',
+      entityId: updated.id,
+      oldValues: existing,
+      newValues: updated,
+      metadata: { changedFields: Object.keys(updates) },
+      req,
+    });
+
     return res.status(200).json({
       success: true,
       message: 'Babysitter updated successfully.',
@@ -137,7 +162,18 @@ async function remove(req, res, next) {
     if (!existing) throw new AppError('Babysitter not found.', 404);
 
     // BaseModel.softDeleteById() — never hard deletes, preserves payment history
-    await BabysitterModel.softDeleteById(req.params.id);
+    const deactivated = await BabysitterModel.softDeleteById(req.params.id);
+
+    await auditService.log({
+      actorId: req.user.id,
+      userEmail: req.user.email,
+      action: 'babysitter.deactivated',
+      entityType: 'babysitter',
+      entityId: existing.id,
+      oldValues: existing,
+      newValues: deactivated,
+      req,
+    });
 
     return res.status(200).json({
       success: true,
