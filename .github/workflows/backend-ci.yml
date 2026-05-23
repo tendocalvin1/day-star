@@ -1,0 +1,71 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - main
+      - "codex/**"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test backend
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: daystar_test
+          POSTGRES_USER: daystar
+          POSTGRES_PASSWORD: daystar_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U daystar -d daystar_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: daystar-backend
+
+    env:
+      NODE_ENV: development
+      PORT: 5000
+      JWT_SECRET: daystar_ci_secret_change_before_real_deploys
+      JWT_ACCESS_EXPIRES_IN: 15m
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: daystar_test
+      DB_USER: daystar
+      DB_PASSWORD: daystar_test_password
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: daystar-backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run database migrations
+        run: npm run migrate
+
+      - name: Seed test database
+        run: npm run seed
+
+      - name: Run backend tests
+        run: npm test
