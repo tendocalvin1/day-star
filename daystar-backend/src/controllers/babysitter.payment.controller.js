@@ -3,7 +3,7 @@
 const { BabysitterPaymentModel, AttendanceModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 const logger = require('../config/logger'); 
-const { addPaymentJob } = require('../config/queue');
+
 
 // Payment rates as defined in the exam spec
 const RATES = {

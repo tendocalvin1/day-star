@@ -104,18 +104,31 @@ describe('Attendance API', () => {
     });
 
     test('rejects duplicate check-in for same child same day', async () => {
-      const res = await request(app)
-        .post('/api/attendance/check-in')
-        .set('Authorization', `Bearer ${token}`)
-        .send({
-          child_id: 1,
-          date: today,
-          session_type: 'full_day',
-        });
+  const testDate = '2025-01-15'; // fixed past date not in seed data
 
-      expect(res.status).toBe(409);
-      expect(res.body.success).toBe(false);
+  // First check-in should succeed
+  await request(app)
+    .post('/api/attendance/check-in')
+    .set('Authorization', `Bearer ${token}`)
+    .send({
+      child_id: 2,
+      date: testDate,
+      session_type: 'full_day',
     });
+
+  // Second check-in same child same day should fail
+  const res = await request(app)
+    .post('/api/attendance/check-in')
+    .set('Authorization', `Bearer ${token}`)
+    .send({
+      child_id: 2,
+      date: testDate,
+      session_type: 'full_day',
+    });
+
+  expect(res.status).toBe(409);
+  expect(res.body.success).toBe(false);
+});
 
     test('rejects check-in for non-existent child', async () => {
       const res = await request(app)
