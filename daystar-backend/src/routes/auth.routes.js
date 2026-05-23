@@ -2,7 +2,7 @@ const router = require('express').Router();
 const { login, getMe, changePassword } = require('../controllers/auth.controller');
 const { requireAuth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
-const { loginSchema } = require('../config/schemas');
+const { loginSchema, changePasswordSchema } = require('../config/schemas');
 
 /**
  * @swagger
@@ -82,6 +82,6 @@ router.get('/me', requireAuth, getMe);
  *       401:
  *         description: Current password incorrect
  */
-router.put('/change-password', requireAuth, changePassword);
+router.put('/change-password', requireAuth, validate(changePasswordSchema), changePassword);
 
 module.exports = router;

@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { UserModel, BabysitterModel } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 const logger = require('../config/logger');
+const auditService = require('../services/auditService');
 
 /**
  * POST /api/auth/login
@@ -13,16 +14,48 @@ async function login(req, res, next) {
 
     const user = await UserModel.findByEmail(email);
 
-    if (!user) throw new AppError('Invalid email or password.', 401);
-    if (!user.is_active) throw new AppError('Your account has been deactivated. Contact the manager.', 401);
+    if (!user) {
+      await auditService.log({
+        userEmail: email,
+        action: 'auth.login_failed',
+        entityType: 'user',
+        metadata: { reason: 'invalid_credentials' },
+        req,
+      });
+      throw new AppError('Invalid email or password.', 401);
+    }
+
+    if (!user.is_active) {
+      await auditService.log({
+        actorId: user.id,
+        userEmail: user.email,
+        action: 'auth.login_failed',
+        entityType: 'user',
+        entityId: user.id,
+        metadata: { reason: 'inactive_account' },
+        req,
+      });
+      throw new AppError('Your account has been deactivated. Contact the manager.', 401);
+    }
 
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
-    if (!passwordMatch) throw new AppError('Invalid email or password.', 401);
+    if (!passwordMatch) {
+      await auditService.log({
+        actorId: user.id,
+        userEmail: user.email,
+        action: 'auth.login_failed',
+        entityType: 'user',
+        entityId: user.id,
+        metadata: { reason: 'invalid_credentials' },
+        req,
+      });
+      throw new AppError('Invalid email or password.', 401);
+    }
 
     const token = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' }
     );
 
     let profile = null;
@@ -35,6 +68,16 @@ async function login(req, res, next) {
       email: user.email,
       role: user.role,
       ip: req.ip,
+    });
+
+    await auditService.log({
+      actorId: user.id,
+      userEmail: user.email,
+      action: 'auth.login_success',
+      entityType: 'user',
+      entityId: user.id,
+      metadata: { role: user.role },
+      req,
     });
 
     return res.status(200).json({
@@ -77,15 +120,7 @@ async function getMe(req, res, next) {
  */
 async function changePassword(req, res, next) {
   try {
-    const { current_password, new_password } = req.body;
-
-    if (!current_password || !new_password) {
-      throw new AppError('current_password and new_password are required.', 400);
-    }
-
-    if (new_password.length < 8) {
-      throw new AppError('New password must be at least 8 characters.', 400);
-    }
+    const { current_password, new_password } = req.validatedData;
 
     const user = await UserModel.findByEmail(req.user.email);
     const match = await bcrypt.compare(current_password, user.password_hash);
@@ -96,6 +131,15 @@ async function changePassword(req, res, next) {
     await UserModel.updateById(req.user.id, { password_hash: hash });
 
     logger.info('User changed password', { userId: req.user.id });
+
+    await auditService.log({
+      actorId: req.user.id,
+      userEmail: req.user.email,
+      action: 'auth.password_changed',
+      entityType: 'user',
+      entityId: req.user.id,
+      req,
+    });
 
     return res.status(200).json({
       success: true,
