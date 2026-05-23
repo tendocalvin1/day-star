@@ -6,6 +6,7 @@ validateEnv();
 
 const app = require('./app');
 const logger = require('./config/logger');
+const db = require('./config/database');
 
 const PORT = process.env.PORT || 5000;
 
@@ -17,6 +18,24 @@ const server = app.listen(PORT, () => {
     environment: process.env.NODE_ENV || 'development',
   });
 });
+
+async function shutdown(signal) {
+  logger.info(`${signal} received. Shutting down gracefully.`);
+
+  server.close(async () => {
+    try {
+      await db.destroy();
+      logger.info('HTTP server closed and database pool destroyed');
+      process.exit(0);
+    } catch (err) {
+      logger.error('Error during graceful shutdown', {
+        error: err.message,
+        stack: err.stack,
+      });
+      process.exit(1);
+    }
+  });
+}
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
@@ -35,5 +54,8 @@ process.on('uncaughtException', (err) => {
   });
   process.exit(1);
 });
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 module.exports = server;
