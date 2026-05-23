@@ -2,6 +2,7 @@
 
 require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 const path = require('path');
+const useSsl = process.env.DB_SSL === 'true';
 
 module.exports = {
   development: {
@@ -25,8 +26,10 @@ module.exports = {
 
   production: {
     client: 'pg',
-    connection: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    connection: {
+      connectionString: process.env.DATABASE_URL,
+      ...(useSsl && { ssl: { rejectUnauthorized: false } }),
+    },
     migrations: {
       directory: path.join(__dirname, 'src/db/migrations'),
       tableName: 'knex_migrations',

@@ -18,6 +18,7 @@ const logger = require('./logger');
  */
 
 const environment = process.env.NODE_ENV || 'development';
+const useSsl = process.env.DB_SSL === 'true';
 
 // ── Connection config based on environment ─────────────────────────────────
 
@@ -26,7 +27,7 @@ const connectionConfig =
     ? {
         // Production (Supabase / Render): single DATABASE_URL string
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
+        ...(useSsl && { ssl: { rejectUnauthorized: false } }),
       }
     : {
         // Development: individual .env variables
