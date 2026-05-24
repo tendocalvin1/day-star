@@ -5,6 +5,7 @@ const { AppError } = require('../middleware/errorHandler');
 const logger = require('../config/logger');
 const auditService = require('../services/auditService');
 
+// auth.controller.js - Handles authentication-related operations such as login, fetching user info, and changing passwords.
 /**
  * POST /api/auth/login
  */
