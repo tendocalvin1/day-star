@@ -1,4 +1,4 @@
-
+// app.js - Main application setup for Daystar Daycare API
 
 require('dotenv').config();
 const express = require('express');
