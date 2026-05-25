@@ -1,13 +1,14 @@
 
 const jwt = require('jsonwebtoken');
 const { UserModel } = require('../models');
+const { AppError } = require('./errorHandler');
 
 async function requireAuth(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
+      return next(new AppError('Access denied. No token provided.', 401));
     }
 
     const token = authHeader.split(' ')[1];
@@ -15,14 +16,18 @@ async function requireAuth(req, res, next) {
 
     const user = await UserModel.findByIdSafe(decoded.userId);
 
-    if (!user) return res.status(401).json({ success: false, message: 'User not found.' });
-    if (!user.is_active) return res.status(401).json({ success: false, message: 'Account is deactivated.' });
+    if (!user) return next(new AppError('User not found.', 401));
+    if (!user.is_active) return next(new AppError('Account is deactivated.', 401));
 
     req.user = user;
     next();
   } catch (error) {
-    if (error.name === 'TokenExpiredError') return res.status(401).json({ success: false, message: 'Token expired. Please log in again.' });
-    if (error.name === 'JsonWebTokenError') return res.status(401).json({ success: false, message: 'Invalid token.' });
+    if (error.name === 'TokenExpiredError') {
+      return next(new AppError('Token expired. Please log in again.', 401));
+    }
+    if (error.name === 'JsonWebTokenError') {
+      return next(new AppError('Invalid token.', 401));
+    }
     next(error);
   }
 }
@@ -34,10 +39,7 @@ async function requireAuth(req, res, next) {
  */
 function requireManager(req, res, next) {
   if (req.user.role !== 'manager') {
-    return res.status(403).json({
-      success: false,
-      message: 'Access denied. Manager role required.',
-    });
+    return next(new AppError('Access denied. Manager role required.', 403));
   }
   next();
 }
@@ -49,10 +51,7 @@ function requireManager(req, res, next) {
  */
 function requireBabysitter(req, res, next) {
   if (req.user.role !== 'babysitter') {
-    return res.status(403).json({
-      success: false,
-      message: 'Access denied. Babysitter role required.',
-    });
+    return next(new AppError('Access denied. Babysitter role required.', 403));
   }
   next();
 }
