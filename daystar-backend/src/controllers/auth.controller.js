@@ -123,7 +123,10 @@ async function changePassword(req, res, next) {
   try {
     const { current_password, new_password } = req.validatedData;
 
-    const user = await UserModel.findByEmail(req.user.email);
+    const user = await UserModel.findById(req.user.id);
+    if (!user) throw new AppError('User not found.', 401);
+    if (!user.is_active) throw new AppError('Account is deactivated. Contact the manager.', 401);
+
     const match = await bcrypt.compare(current_password, user.password_hash);
 
     if (!match) throw new AppError('Current password is incorrect.', 401);

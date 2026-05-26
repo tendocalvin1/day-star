@@ -19,40 +19,68 @@ const server = app.listen(PORT, () => {
   });
 });
 
-async function shutdown(signal) {
-  logger.info(`${signal} received. Shutting down gracefully.`);
+let shuttingDown = false;
 
-  server.close(async () => {
-    try {
-      await db.destroy();
-      logger.info('HTTP server closed and database pool destroyed');
-      process.exit(0);
-    } catch (err) {
-      logger.error('Error during graceful shutdown', {
-        error: err.message,
-        stack: err.stack,
-      });
-      process.exit(1);
-    }
+function closeServer() {
+  return new Promise((resolve, reject) => {
+    server.close((err) => {
+      if (err) return reject(err);
+      resolve();
+    });
   });
 }
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  logger.error('Unhandled Promise Rejection', {
-    error: err.message,
-    stack: err.stack,
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
+  logger.info(`${signal} received. Shutting down gracefully.`);
+
+  try {
+    await closeServer();
+    await db.destroy();
+    logger.info('HTTP server closed and database pool destroyed');
+    process.exit(0);
+  } catch (err) {
+    logger.error('Error during graceful shutdown', {
+      error: err.message,
+      stack: err.stack,
+    });
+    process.exit(1);
+  }
+}
+
+async function handleFatalError(err, origin) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
+  logger.error('Fatal error', {
+    origin,
+    message: err?.message,
+    stack: err?.stack,
   });
-  server.close(() => process.exit(1));
+
+  try {
+    await closeServer();
+    await db.destroy();
+  } catch (shutdownError) {
+    logger.error('Error during shutdown after fatal error', {
+      error: shutdownError.message,
+      stack: shutdownError.stack,
+    });
+  }
+
+  process.exit(1);
+}
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason) => {
+  handleFatalError(reason, 'unhandledRejection');
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  logger.error('Uncaught Exception', {
-    error: err.message,
-    stack: err.stack,
-  });
-  process.exit(1);
+  handleFatalError(err, 'uncaughtException');
 });
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));

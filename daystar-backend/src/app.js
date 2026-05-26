@@ -16,6 +16,11 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 
+// Proxy-aware deployments (load balancer, reverse proxy)
+if (process.env.TRUST_PROXY === 'true') {
+  app.set('trust proxy', 1);
+}
+
 // ── Security & Logging ─────────────────────────────────────────────────────
 app.use(helmet());
 app.use(cookieParser());
@@ -71,10 +76,13 @@ app.use('/api/auth/login', loginLimiter);
 app.use('/api', apiLimiter);
 
 // ── API Documentation ───────────────────────────────────────────────────────
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customSiteTitle: 'Daystar Daycare API Docs',
-  customCss: '.swagger-ui .topbar { background-color: #1e40af; }',
-}));
+const enableSwagger = process.env.NODE_ENV !== 'production' || process.env.SWAGGER_ENABLE === 'true';
+if (enableSwagger) {
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: 'Daystar Daycare API Docs',
+    customCss: '.swagger-ui .topbar { background-color: #1e40af; }',
+  }));
+}
 
 // ── Health Check ───────────────────────────────────────────────────────────
 app.get('/health', async (req, res) => {

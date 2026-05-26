@@ -11,8 +11,14 @@ async function requireAuth(req, res, next) {
       return next(new AppError('Access denied. No token provided.', 401));
     }
 
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+    });
+
+    if (!decoded || !decoded.userId) {
+      return next(new AppError('Invalid token.', 401));
+    }
 
     const user = await UserModel.findByIdSafe(decoded.userId);
 

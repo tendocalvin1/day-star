@@ -29,10 +29,11 @@ services:
       NODE_ENV: production
       PORT: 5000
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
-      JWT_SECRET: ${JWT_SECRET:-daystar_dev_secret_change_in_production_2026}
+      JWT_SECRET: ${JWT_SECRET}
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
-      DATABASE_URL: postgres://${POSTGRES_USER:-daystar}:${POSTGRES_PASSWORD:-daystar_dev_password}@postgres:5432/${POSTGRES_DB:-daystar_daycare}
+      DATABASE_URL: ${DATABASE_URL}
       DB_SSL: "false"
+      SWAGGER_ENABLE: ${SWAGGER_ENABLE:-false}
     ports:
       - "${API_PORT:-5000}:5000"
     command: sh -c "npm run migrate && node src/server.js"
