@@ -82,6 +82,14 @@ if (enableSwagger) {
     customSiteTitle: 'Daystar Daycare API Docs',
     customCss: '.swagger-ui .topbar { background-color: #1e40af; }',
   }));
+  logger.info('Swagger UI enabled', {
+    environment: process.env.NODE_ENV,
+    swaggerEnable: process.env.SWAGGER_ENABLE,
+  });
+} else {
+  logger.info('Swagger UI disabled in production', {
+    environment: process.env.NODE_ENV,
+  });
 }
 
 // ── Health Check ───────────────────────────────────────────────────────────
