@@ -113,6 +113,53 @@ describe('Auth middleware verification', () => {
     });
   });
 
+  test('rejects tokens with unsupported algorithm in header (algorithm confusion attack)', async () => {
+    // This test confirms middleware strictly enforces HS256 only.
+    // We create a valid HS256 token, then manipulate its header to claim RS256.
+    // The middleware will reject it because jwt.verify with algorithms: ['HS256']
+    // will fail when the token header claims a different algorithm.
+    const payload = { userId: 1, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600 };
+    const validToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    // Split token and modify header to claim RS256
+    const [header, payload_b64, signature] = validToken.split('.');
+    const decodedHeader = JSON.parse(Buffer.from(header, 'base64').toString());
+    decodedHeader.alg = 'RS256';
+    const fakeHeader = Buffer.from(JSON.stringify(decodedHeader)).toString('base64')
+      .replace(/=/g, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+    const manipulatedToken = `${fakeHeader}.${payload_b64}.${signature}`;
+
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${manipulatedToken}`);
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({
+      success: false,
+      message: 'Invalid token.',
+    });
+  });
+
+  test('rejects tokens with alg=none (signature bypass attack)', async () => {
+    // Create a token with alg: 'none' to simulate signature bypass
+    const noneAlgToken = jwt.sign({ userId: 1 }, '', {
+      algorithm: 'none',
+      expiresIn: '1h',
+    });
+
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${noneAlgToken}`);
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({
+      success: false,
+      message: 'Invalid token.',
+    });
+  });
+
   test('requireManager route denies babysitter users with 403', async () => {
     const res = await request(app)
       .get('/api/babysitters')

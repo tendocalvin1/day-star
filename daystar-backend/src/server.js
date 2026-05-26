@@ -36,12 +36,21 @@ async function shutdown(signal) {
 
   logger.info(`${signal} received. Shutting down gracefully.`);
 
+  // Forced shutdown timeout: exit after 10 seconds if graceful shutdown hangs
+  const shutdownTimeout = setTimeout(() => {
+    logger.error('Graceful shutdown timeout exceeded. Force exiting.');
+    process.exit(1);
+  }, 10000);
+  shutdownTimeout.unref(); // Allow Node to exit even if timer is pending
+
   try {
     await closeServer();
     await db.destroy();
+    clearTimeout(shutdownTimeout);
     logger.info('HTTP server closed and database pool destroyed');
     process.exit(0);
   } catch (err) {
+    clearTimeout(shutdownTimeout);
     logger.error('Error during graceful shutdown', {
       error: err.message,
       stack: err.stack,
@@ -60,10 +69,19 @@ async function handleFatalError(err, origin) {
     stack: err?.stack,
   });
 
+  // Forced shutdown timeout: exit after 5 seconds if fatal shutdown hangs
+  const shutdownTimeout = setTimeout(() => {
+    logger.error('Fatal error shutdown timeout exceeded. Force exiting.');
+    process.exit(1);
+  }, 5000);
+  shutdownTimeout.unref();
+
   try {
     await closeServer();
     await db.destroy();
+    clearTimeout(shutdownTimeout);
   } catch (shutdownError) {
+    clearTimeout(shutdownTimeout);
     logger.error('Error during shutdown after fatal error', {
       error: shutdownError.message,
       stack: shutdownError.stack,
