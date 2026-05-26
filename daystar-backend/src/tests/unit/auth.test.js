@@ -62,6 +62,21 @@ describe('auth middleware', () => {
     expect(err.statusCode).toBe(401);
   });
 
+  test('enforces HS256 algorithm during token verification', async () => {
+    const verifySpy = jest.spyOn(jwt, 'verify').mockImplementation(() => {
+      throw new jwt.JsonWebTokenError('invalid token');
+    });
+
+    const req = mockRequest({ authorization: 'Bearer invalidtoken' });
+    const next = jest.fn();
+
+    await requireAuth(req, {}, next);
+
+    expect(verifySpy).toHaveBeenCalledWith('invalidtoken', process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+    });
+  });
+
   test('rejects expired JWT token through AppError', async () => {
     jest.spyOn(jwt, 'verify').mockImplementation(() => {
       throw new jwt.TokenExpiredError('jwt expired', new Date(0));

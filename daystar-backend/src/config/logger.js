@@ -1,3 +1,4 @@
+const fs = require('fs');
 const winston = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
 const path = require('path');
@@ -49,6 +50,11 @@ const transports = [
 
 // Add file transports in production and development (not test)
 if (process.env.NODE_ENV !== 'test') {
+  const logsDir = path.join(__dirname, '../logs');
+  if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+  }
+
   transports.push(
     // Error logs only
     new DailyRotateFile({
