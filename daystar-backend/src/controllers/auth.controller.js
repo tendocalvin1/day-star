@@ -167,3 +167,19 @@ async function changePassword(req, res, next) {
 }
 
 module.exports = { login, getMe, changePassword };
+
+/**
+ * POST /api/auth/logout
+ * Clears the access_token cookie (httpOnly)
+ */
+async function logout(req, res, next) {
+  try {
+    const isProd = process.env.NODE_ENV === 'production';
+    res.clearCookie('access_token', { httpOnly: true, secure: isProd, sameSite: 'lax' });
+    return res.status(200).json({ success: true, message: 'Logged out' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { login, getMe, changePassword, logout };

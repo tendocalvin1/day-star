@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -15,6 +16,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const { login } = useAuth();
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -24,6 +26,7 @@ export function LoginForm() {
   async function onSubmit(values: LoginFormValues) {
     try {
       await login(values);
+      router.push('/dashboard');
     } catch (e) {
       // AuthProvider handles toasts; surface nothing here
     }
