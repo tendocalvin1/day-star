@@ -7,11 +7,18 @@ async function requireAuth(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Support token via Authorization header or httpOnly cookie named 'access_token'
+    let token = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.replace(/^Bearer\s+/i, '').trim();
+    } else if (req.cookies && req.cookies.access_token) {
+      token = req.cookies.access_token;
+    }
+
+    if (!token) {
       return next(new AppError('Access denied. No token provided.', 401));
     }
 
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
     const decoded = jwt.verify(token, process.env.JWT_SECRET, {
       algorithms: ['HS256'],
     });

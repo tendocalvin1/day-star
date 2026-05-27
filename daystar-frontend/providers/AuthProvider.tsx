@@ -1,16 +1,17 @@
 "use client";
 
-import React, { createContext, useCallback, useEffect, useState } from "react";
-import api from "../services/api/client";
-import { useQueryClient } from "@tanstack/react-query";
+import React, { createContext, useEffect, useMemo, useState } from "react";
+import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
+import * as authApi from "../services/api/auth";
+import { toast } from "sonner";
 
-type User = { id: number; name?: string; email?: string } | null;
+export type User = { id: number; name?: string; email: string } | null;
 
-type AuthContextValue = {
+export type AuthContextValue = {
   user: User;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (payload: { email: string; password: string }) => Promise<any>;
+  login: (payload: { email: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -25,53 +26,79 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User>(null);
-  const [loading, setLoading] = useState(true);
   const qc = useQueryClient();
 
-  const fetchMe = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await api.get("/auth/me");
-      setUser(res.data ?? null);
-    } catch (e) {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    data: meData,
+    isFetching: loading,
+    refetch: refetchMe,
+  } = useQuery({
+    queryKey: ["auth", "me"],
+    queryFn: authApi.me,
+    retry: false,
+    refetchOnWindowFocus: false,
+  }) as { data: User | null; isFetching: boolean; refetch: () => Promise<any> };
+
+  const [user, setUser] = useState<User>(meData ?? null);
 
   useEffect(() => {
-    fetchMe();
+    setUser(meData ?? null);
+  }, [meData]);
+
+  const loginMutation = useMutation({
+    mutationFn: authApi.login,
+    onSuccess(data) {
+      setUser(data.user ?? null);
+      qc.invalidateQueries({ queryKey: ["auth", "me"] });
+      toast.success("Signed in");
+      window.dispatchEvent(new CustomEvent("ds:login"));
+    },
+    onError(err: unknown) {
+      const message = (err as any)?.response?.data?.message ?? "Sign in failed";
+      toast.error(message);
+    },
+  });
+
+  const logoutMutation = useMutation({
+    mutationFn: authApi.logout,
+    onSuccess() {
+      setUser(null);
+      qc.removeQueries();
+      toast("Signed out");
+      window.dispatchEvent(new CustomEvent("ds:logout"));
+    },
+    onError() {
+      toast.error("Sign out failed");
+    },
+  });
+
+  useEffect(() => {
     function onUnauthorized() {
       setUser(null);
+      qc.removeQueries();
     }
     window.addEventListener("ds:unauthorized", onUnauthorized as EventListener);
     return () => window.removeEventListener("ds:unauthorized", onUnauthorized as EventListener);
-  }, [fetchMe]);
+  }, [qc]);
 
   const login = async (payload: { email: string; password: string }) => {
-    const res = await api.post("/auth/login", payload);
-    // backend should set httpOnly cookie and return user
-    setUser(res.data.user ?? null);
-    window.dispatchEvent(new CustomEvent("ds:login"));
-    return res.data;
+    await loginMutation.mutateAsync(payload);
   };
 
   const logout = async () => {
-    await api.post("/auth/logout");
-    setUser(null);
-    qc.clear();
-    window.dispatchEvent(new CustomEvent("ds:logout"));
+    await logoutMutation.mutateAsync();
   };
 
-  const refresh = async () => fetchMe();
+  const refresh = async () => {
+    await refetchMe();
+  };
 
-  return (
-    <AuthContext.Provider value={{ user, loading, isAuthenticated: !!user, login, logout, refresh }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({ user, loading, isAuthenticated: !!user, login, logout, refresh }),
+    [user, loading]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export default AuthContext;
