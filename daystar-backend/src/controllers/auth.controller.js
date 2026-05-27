@@ -59,6 +59,18 @@ async function login(req, res, next) {
       { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' }
     );
 
+    // Set httpOnly cookie for browser clients while still returning token in body
+    const isProd = process.env.NODE_ENV === 'production';
+    // Default maxAge to 15 minutes in milliseconds
+    const cookieMaxAge = (parseInt(process.env.JWT_ACCESS_EXPIRES_MS || '', 10) || 15 * 60 * 1000);
+
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      maxAge: cookieMaxAge,
+    });
+
     let profile = null;
     if (user.role === 'babysitter' && user.babysitter_id) {
       profile = await BabysitterModel.findById(user.babysitter_id);
