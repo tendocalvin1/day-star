@@ -118,7 +118,7 @@ describe('Auth middleware verification', () => {
     // We create a valid HS256 token, then manipulate its header to claim RS256.
     // The middleware will reject it because jwt.verify with algorithms: ['HS256']
     // will fail when the token header claims a different algorithm.
-    const payload = { userId: 1, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600 };
+    const payload = { userId: 1 };
     const validToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     // Split token and modify header to claim RS256
