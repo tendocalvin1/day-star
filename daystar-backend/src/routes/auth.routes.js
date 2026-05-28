@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { login, getMe, changePassword } = require('../controllers/auth.controller');
+const { login, getMe, changePassword, logout } = require('../controllers/auth.controller');
 const { requireAuth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const { loginSchema, changePasswordSchema } = require('../config/schemas');
@@ -61,6 +61,9 @@ const { loginSchema, changePasswordSchema } = require('../config/schemas');
  *             schema: { $ref: '#/components/schemas/ValidationError' }
  */
 router.post('/login', validate(loginSchema), login);
+
+// POST /api/auth/logout - clears auth cookie
+router.post('/logout', logout);
 
 /**
  * @swagger
