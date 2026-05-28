@@ -1,3 +1,5 @@
+// app/(auth)/login/page.tsx
+// This is the login page for the application. It uses the LoginForm component to render the login form.
 import LoginForm from "../../../components/auth/LoginForm";
 
 export default function LoginPage() {
