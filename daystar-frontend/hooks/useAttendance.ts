@@ -1,7 +1,8 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getAttendance, checkIn, checkOut, getChildren, type AttendanceRecord, type Child } from "@/services/api/attendance"
+import { getAttendance, checkIn, checkOut, type AttendanceRecord } from "@/services/api/attendance"
+import { getChildren, type Child } from "@/services/api/children"
 import { toast } from "sonner"
 
 export function useAttendance(date?: string) {
@@ -23,11 +24,11 @@ export function useCheckIn() {
 
   return useMutation({
     mutationFn: checkIn,
-    onSuccess: (data) => {
+    onSuccess(data) {
       toast.success(data.message)
       queryClient.invalidateQueries({ queryKey: ["attendance"] })
     },
-    onError: (error: any) => {
+    onError(error: any) {
       toast.error(error?.response?.data?.message || "Failed to check in")
     },
   })
@@ -38,11 +39,11 @@ export function useCheckOut() {
 
   return useMutation({
     mutationFn: ({ id }: { id: number }) => checkOut(id),
-    onSuccess: (data) => {
+    onSuccess(data) {
       toast.success(data.message)
       queryClient.invalidateQueries({ queryKey: ["attendance"] })
     },
-    onError: (error: any) => {
+    onError(error: any) {
       toast.error(error?.response?.data?.message || "Failed to check out")
     },
   })

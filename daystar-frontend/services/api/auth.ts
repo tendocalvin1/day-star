@@ -7,15 +7,23 @@ export type LoginPayload = {
 
 export type User = {
   id: number;
-  name?: string;
   email: string;
+  role: "manager" | "babysitter";
+  babysitter_id: number | null;
+  is_active: boolean;
+  profile?: any;
 };
 
 export type LoginResponse = {
+  success: boolean;
+  token: string;
   user: User;
 };
 
-export type MeResponse = User | null;
+export type MeResponse = {
+  success: boolean;
+  user: User;
+};
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   const res = await api.post<LoginResponse>("/auth/login", payload);
