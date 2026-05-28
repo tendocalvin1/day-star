@@ -5,7 +5,7 @@ import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import * as authApi from "../services/api/auth";
 import { toast } from "sonner";
 
-export type User = { id: number; name?: string; email: string } | null;
+export type User = authApi.User | null;
 
 export type AuthContextValue = {
   user: User;
@@ -37,7 +37,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     queryFn: authApi.me,
     retry: false,
     refetchOnWindowFocus: false,
-  }) as { data: User | null; isFetching: boolean; refetch: () => Promise<any> };
+    select: (data) => data?.user ?? null,
+  });
 
   const [user, setUser] = useState<User>(meData ?? null);
 
