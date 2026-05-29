@@ -6,14 +6,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useAttendance, useChildren, useCheckIn, useCheckOut } from "@/hooks/useAttendance"
+import { useAttendance, useCheckIn, useCheckOut } from "@/hooks/useAttendance"
+import { useNotCheckedIn } from "@/hooks/useChildren"
 import CheckInModal from "@/components/attendance/CheckInModal"
 
 export default function AttendancePage() {
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0])
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false)
   const { data, isLoading, error } = useAttendance(selectedDate)
-  const { data: childrenData } = useChildren()
+  const { data: notCheckedInData } = useNotCheckedIn(selectedDate)
   const checkOutMutation = useCheckOut()
 
   const records = data?.data || []
@@ -117,7 +118,7 @@ export default function AttendancePage() {
             </div>
           ) : error ? (
             <div className="p-8 text-center">
-              <p className="text-red-500">Failed to load attendance</p>
+              <p className="text-red-600">Failed to load attendance</p>
               <p className="text-gray-500 mt-2">Please try again later</p>
             </div>
           ) : records.length === 0 ? (
@@ -167,11 +168,11 @@ export default function AttendancePage() {
         </CardContent>
       </Card>
 
-      {childrenData && (
+      {notCheckedInData && (
         <CheckInModal
           isOpen={isCheckInModalOpen}
           onClose={() => setIsCheckInModalOpen(false)}
-          children={childrenData.data}
+          children={notCheckedInData.data}
           date={selectedDate}
         />
       )}

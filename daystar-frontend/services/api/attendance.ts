@@ -73,18 +73,4 @@ export async function checkOut(id: number, payload?: CheckOutPayload): Promise<C
   return res.data;
 }
 
-// Get children API
-export type Child = {
-  id: number;
-  full_name: string;
-  parent_phone: string | null;
-  special_needs: string | null;
-  is_active: boolean;
-};
-
-export async function getChildren(): Promise<{ success: boolean; data: Child[] }> {
-  const res = await api.get("/children");
-  return res.data;
-}
-
-export default { getAttendance, checkIn, checkOut, getChildren };
+export default { getAttendance, checkIn, checkOut };
