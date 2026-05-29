@@ -2,20 +2,12 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getAttendance, checkIn, checkOut, type AttendanceRecord } from "@/services/api/attendance"
-import { getChildren, type Child } from "@/services/api/children"
 import { toast } from "sonner"
 
 export function useAttendance(date?: string) {
   return useQuery({
     queryKey: ["attendance", date],
     queryFn: () => getAttendance(date),
-  })
-}
-
-export function useChildren() {
-  return useQuery({
-    queryKey: ["children"],
-    queryFn: () => getChildren(),
   })
 }
 
