@@ -1,3 +1,6 @@
+// This component is used in the login page and handles the login form submission.
+// It uses react-hook-form for form state management and zod for validation. On successful login, it redirects the user to the dashboard.
+
 "use client";
 
 import React from "react";
