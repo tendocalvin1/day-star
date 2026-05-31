@@ -4,26 +4,55 @@
 
 @layer base {
   :root {
-    --background: #ffffff;
-    --foreground: #171717;
+    --background: #f6f8fb;
+    --foreground: #111827;
+    --card: #ffffff;
+    --muted: #64748b;
+    --primary: #4f46e5;
+    --primary-strong: #3730a3;
+    --border: #e2e8f0;
+    --ring: #818cf8;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --background: #0a0a0a;
-      --foreground: #ededed;
-    }
+  * {
+    border-color: var(--border);
   }
 
   body {
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-geist-sans, system-ui, sans-serif);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
 
   code {
     font-family: var(--font-geist-mono, monospace);
   }
+
+  ::selection {
+    background: #c7d2fe;
+    color: #111827;
+  }
 }
 
+@layer components {
+  .daystar-surface {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.05),
+      0 18px 45px rgba(15, 23, 42, 0.04);
+  }
 
+  .daystar-page {
+    width: 100%;
+    max-width: 80rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .daystar-page > * + * {
+    margin-top: 2rem;
+  }
+}

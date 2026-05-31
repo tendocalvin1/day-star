@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Plus } from "lucide-react"
+import { AlertCircle, Plus, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChildTable } from "@/components/children/ChildTable"
@@ -13,7 +13,10 @@ import {
   useUpdateChild,
   useDeleteChild,
 } from "@/hooks/useChildren"
-import { Child } from "@/services/api/children"
+import { Child, CreateChildPayload, UpdateChildPayload } from "@/services/api/children"
+import { DataTableToolbar, SelectInput } from "@/components/shared/DataTableToolbar"
+import { EmptyState } from "@/components/shared/EmptyState"
+import { PageHeader } from "@/components/shared/PageHeader"
 
 export default function ChildrenPage() {
   const [showForm, setShowForm] = useState(false)
@@ -32,18 +35,18 @@ export default function ChildrenPage() {
   const updateChild = useUpdateChild()
   const deleteChild = useDeleteChild()
 
-  const handleCreate = (data: any) => {
-    createChild.mutate(data, {
+  const handleCreate = (data: CreateChildPayload | UpdateChildPayload) => {
+    createChild.mutate(data as CreateChildPayload, {
       onSuccess: () => {
         setShowForm(false)
       },
     })
   }
 
-  const handleUpdate = (data: any) => {
+  const handleUpdate = (data: CreateChildPayload | UpdateChildPayload) => {
     if (editingChild) {
       updateChild.mutate(
-        { id: editingChild.id, payload: data },
+        { id: editingChild.id, payload: data as UpdateChildPayload },
         {
           onSuccess: () => {
             setShowForm(false)
@@ -72,63 +75,64 @@ export default function ChildrenPage() {
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-600">Failed to load children</p>
+      <div className="daystar-page">
+        <EmptyState
+          icon={AlertCircle}
+          title="Failed to load children"
+          description="Please refresh the page or adjust your filters."
+          tone="danger"
+        />
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Children</h1>
-          <p className="text-gray-500 mt-1">
-            {data?.total ? `Total: ${data.total} children` : "Manage registered children"}
-          </p>
-        </div>
-        {user?.role === "manager" && (
-          <Button onClick={() => setShowForm(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Register Child
-          </Button>
-        )}
-      </div>
+    <div className="daystar-page">
+      <PageHeader
+        eyebrow="Family records"
+        title={showForm ? (editingChild ? "Edit child profile" : "Register child") : "Children"}
+        description={
+          showForm
+            ? "Keep family details, session type, and care notes accurate."
+            : data?.total
+            ? `${data.total} children match the current view.`
+            : "Manage registered children and their care details."
+        }
+        actions={
+          user?.role === "manager" && !showForm ? (
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Register Child
+            </Button>
+          ) : null
+        }
+      />
 
       {!showForm && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex-1 min-w-[200px]">
-                <input
-                  type="text"
-                  placeholder="Search children..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                />
-              </div>
-              <select
-                value={sessionType || ""}
-                onChange={(e) => setSessionType(e.target.value || undefined)}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-              >
-                <option value="">All Sessions</option>
-                <option value="full_day">Full Day</option>
-                <option value="half_day">Half Day</option>
-              </select>
-              <select
-                value={isActive}
-                onChange={(e) => setIsActive(e.target.value as any)}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-              >
-                <option value="true">Active Only</option>
-                <option value="false">Inactive Only</option>
-                <option value="all">All</option>
-              </select>
-            </div>
-          </CardContent>
-        </Card>
+        <DataTableToolbar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search children, parents, or phone..."
+        >
+          <SelectInput
+            value={sessionType || ""}
+            onChange={(e) => setSessionType(e.target.value || undefined)}
+            className="w-full sm:w-40"
+          >
+            <option value="">All Sessions</option>
+            <option value="full_day">Full Day</option>
+            <option value="half_day">Half Day</option>
+          </SelectInput>
+          <SelectInput
+            value={isActive}
+            onChange={(e) => setIsActive(e.target.value as "true" | "false" | "all")}
+            className="w-full sm:w-40"
+          >
+            <option value="true">Active Only</option>
+            <option value="false">Inactive Only</option>
+            <option value="all">All</option>
+          </SelectInput>
+        </DataTableToolbar>
       )}
 
       {showForm ? (
@@ -140,13 +144,21 @@ export default function ChildrenPage() {
         />
       ) : (
         <Card>
-          <CardContent className="p-0 pt-4">
+          <CardContent className="p-0">
             <ChildTable
               children={data?.data || []}
               isLoading={isLoading}
               onEdit={user?.role === "manager" ? handleEdit : undefined}
               onDelete={user?.role === "manager" ? handleDelete : undefined}
               userRole={user?.role}
+              emptyAction={
+                user?.role === "manager" ? (
+                  <Button onClick={() => setShowForm(true)}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Register Child
+                  </Button>
+                ) : undefined
+              }
             />
           </CardContent>
         </Card>

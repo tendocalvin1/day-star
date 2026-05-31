@@ -4,9 +4,11 @@ import React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { Baby, CalendarDays, Mail, Phone, User, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Child, CreateChildPayload, UpdateChildPayload } from "@/services/api/children"
+import { FormField, SelectInput, TextAreaInput, TextInput } from "@/components/shared/FormField"
 
 // Replicate backend's createChildSchema
 const ugandaPhoneRegex = /^(0|\+256)[0-9]{9}$/
@@ -19,7 +21,7 @@ const childFormSchema = z.object({
   parent_phone: z.string().regex(ugandaPhoneRegex, "Enter a valid Uganda phone (e.g. 0712345678)"),
   parent_email: z.string().email().optional().nullable(),
   session_type: z.enum(["half_day", "full_day"], {
-    errorMap: () => ({ message: "Session type must be 'half_day' or 'full_day'" }),
+    message: "Session type must be 'half_day' or 'full_day'",
   }),
   special_needs: z.string().max(1000).optional().nullable(),
 })
@@ -62,116 +64,90 @@ export function ChildForm({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="border-b border-slate-100">
         <CardTitle>{initialData ? "Edit Child" : "Register Child"}</CardTitle>
+        <CardDescription>
+          Capture the family, session, and care details the team needs each day.
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
-              </label>
-              <input
+      <CardContent className="pt-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <FormField label="Full Name" error={errors.full_name?.message}>
+              <TextInput
+                icon={Baby}
                 type="text"
+                placeholder="Child full name"
+                hasError={!!errors.full_name}
                 {...register("full_name")}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-daystar-500 focus:border-daystar-500"
               />
-              {errors.full_name && (
-                <p className="text-sm text-red-600 mt-1">{errors.full_name.message}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date of Birth
-              </label>
-              <input
+            <FormField label="Date of Birth" error={errors.date_of_birth?.message}>
+              <TextInput
+                icon={CalendarDays}
                 type="date"
+                hasError={!!errors.date_of_birth}
                 {...register("date_of_birth")}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-daystar-500 focus:border-daystar-500"
               />
-              {errors.date_of_birth && (
-                <p className="text-sm text-red-600 mt-1">{errors.date_of_birth.message}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Parent Name
-              </label>
-              <input
+            <FormField label="Parent Name" error={errors.parent_name?.message}>
+              <TextInput
+                icon={User}
                 type="text"
+                placeholder="Parent or guardian"
+                hasError={!!errors.parent_name}
                 {...register("parent_name")}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-daystar-500 focus:border-daystar-500"
               />
-              {errors.parent_name && (
-                <p className="text-sm text-red-600 mt-1">{errors.parent_name.message}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Parent Phone
-              </label>
-              <input
+            <FormField label="Parent Phone" error={errors.parent_phone?.message}>
+              <TextInput
+                icon={Phone}
                 type="tel"
                 {...register("parent_phone")}
                 placeholder="0712345678"
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-daystar-500 focus:border-daystar-500"
+                hasError={!!errors.parent_phone}
               />
-              {errors.parent_phone && (
-                <p className="text-sm text-red-600 mt-1">{errors.parent_phone.message}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Parent Email (Optional)
-              </label>
-              <input
+            <FormField label="Parent Email" error={errors.parent_email?.message} helpText="Optional">
+              <TextInput
+                icon={Mail}
                 type="email"
+                placeholder="parent@example.com"
+                hasError={!!errors.parent_email}
                 {...register("parent_email")}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-daystar-500 focus:border-daystar-500"
               />
-              {errors.parent_email && (
-                <p className="text-sm text-red-600 mt-1">{errors.parent_email.message}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Session Type
-              </label>
-              <select
+            <FormField label="Session Type" error={errors.session_type?.message}>
+              <SelectInput
+                icon={Users}
+                hasError={!!errors.session_type}
                 {...register("session_type")}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-daystar-500 focus:border-daystar-500"
               >
                 <option value="full_day">Full Day</option>
                 <option value="half_day">Half Day</option>
-              </select>
-              {errors.session_type && (
-                <p className="text-sm text-red-600 mt-1">{errors.session_type.message}</p>
-              )}
-            </div>
+              </SelectInput>
+            </FormField>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Special Needs (Optional)
-            </label>
-            <textarea
+          <FormField
+            label="Special Needs"
+            error={errors.special_needs?.message}
+            helpText="Optional care notes, allergies, or additional context."
+          >
+            <TextAreaInput
               {...register("special_needs")}
               rows={3}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-daystar-500 focus:border-daystar-500"
               placeholder="Any special needs or notes about the child"
+              hasError={!!errors.special_needs}
             />
-            {errors.special_needs && (
-              <p className="text-sm text-red-600 mt-1">{errors.special_needs.message}</p>
-            )}
-          </div>
+          </FormField>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row">
             <Button type="submit" disabled={isSubmitting} className="flex-1">
               {isSubmitting
                 ? initialData
