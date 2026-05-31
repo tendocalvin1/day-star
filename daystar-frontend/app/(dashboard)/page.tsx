@@ -2,11 +2,11 @@
 
 import Link from "next/link"
 import {
-  ArrowUpRight,
   Baby,
   CalendarCheck,
   Clock3,
   DollarSign,
+  HeartHandshake,
   ShieldCheck,
   Sparkles,
   UserPlus,
@@ -15,14 +15,16 @@ import {
 import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { EmptyState } from "@/components/shared/EmptyState"
+import { StatCard } from "@/components/shared/StatCard"
+import { StatusBadge } from "@/components/shared/StatusBadge"
 
 const stats = [
   {
     title: "Total Children",
     value: "0",
     helper: "Registered profiles",
-    trend: "Ready for enrollment",
+    trend: "Ready",
     icon: Baby,
     tone: "indigo",
   },
@@ -30,7 +32,7 @@ const stats = [
     title: "Checked In Today",
     value: "0",
     helper: "Currently in care",
-    trend: "Live attendance",
+    trend: "Live",
     icon: CalendarCheck,
     tone: "emerald",
   },
@@ -38,7 +40,7 @@ const stats = [
     title: "Active Babysitters",
     value: "0",
     helper: "Available caregivers",
-    trend: "Team coverage",
+    trend: "Coverage",
     icon: Users,
     tone: "sky",
   },
@@ -46,7 +48,7 @@ const stats = [
     title: "Today's Revenue",
     value: "$0",
     helper: "Recorded payments",
-    trend: "Daily finance",
+    trend: "Today",
     icon: DollarSign,
     tone: "amber",
   },
@@ -66,10 +68,10 @@ const quickActions = [
     icon: UserPlus,
   },
   {
-    title: "Review incidents",
-    description: "Keep care notes visible.",
-    href: "/dashboard/incidents",
-    icon: ShieldCheck,
+    title: "Review care notes",
+    description: "Keep operational context visible.",
+    href: "/dashboard/children",
+    icon: HeartHandshake,
   },
 ]
 
@@ -100,18 +102,18 @@ export default function DashboardPage() {
 
   return (
     <div className="daystar-page">
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1fr_320px] lg:items-center">
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
+        <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1fr_360px] lg:items-center">
           <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
               <Sparkles className="h-3.5 w-3.5" />
               DayStar care operations
             </div>
             <div className="space-y-2">
-              <h1 className="max-w-3xl text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
+              <h1 className="max-w-3xl text-3xl font-bold leading-tight text-slate-950 sm:text-5xl">
                 Welcome back, {firstName}.
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-slate-600">
+              <p className="max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
                 A calm overview of children, attendance, caregivers, and daily revenue so the team can move through the day with confidence.
               </p>
             </div>
@@ -131,12 +133,10 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-4">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm font-semibold text-slate-700">Today&apos;s readiness</p>
-              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                Operational
-              </span>
+              <StatusBadge tone="success">Operational</StatusBadge>
             </div>
             <div className="space-y-3">
               {["Attendance tools online", "Children records accessible", "Secure session active"].map((item) => (
@@ -152,36 +152,15 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title} className="overflow-hidden">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <CardDescription>{stat.title}</CardDescription>
-                  <CardTitle className="mt-2 text-3xl font-bold">{stat.value}</CardTitle>
-                </div>
-                <div
-                  className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-lg",
-                    stat.tone === "indigo" && "bg-indigo-50 text-indigo-600",
-                    stat.tone === "emerald" && "bg-emerald-50 text-emerald-600",
-                    stat.tone === "sky" && "bg-sky-50 text-sky-600",
-                    stat.tone === "amber" && "bg-amber-50 text-amber-600"
-                  )}
-                >
-                  <stat.icon className="h-5 w-5" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
-                <span className="text-xs font-medium text-slate-500">{stat.helper}</span>
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
-                  {stat.trend}
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard
+            key={stat.title}
+            title={stat.title}
+            value={stat.value}
+            description={stat.helper}
+            trend={stat.trend}
+            icon={stat.icon}
+            tone={stat.tone as "indigo" | "emerald" | "sky" | "amber"}
+          />
         ))}
       </div>
 
@@ -235,7 +214,7 @@ export default function DashboardPage() {
                   <p className="text-sm font-semibold text-slate-950">{action.title}</p>
                   <p className="text-sm text-slate-500">{action.description}</p>
                 </div>
-                <ArrowUpRight className="h-4 w-4 text-slate-400 transition-colors group-hover:text-indigo-600" />
+                <span className="h-2 w-2 rounded-full bg-slate-300 transition-colors group-hover:bg-indigo-500" />
               </Link>
             ))}
           </CardContent>
@@ -249,18 +228,16 @@ export default function DashboardPage() {
             <CardDescription>A polished empty state until children begin checking in.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm">
-                <CalendarCheck className="h-7 w-7" />
-              </div>
-              <h3 className="text-base font-semibold text-slate-950">No attendance activity yet</h3>
-              <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-                Once the first child checks in, the daily timeline and occupancy signals will appear here.
-              </p>
-              <Button asChild className="mt-5">
-                <Link href="/dashboard/attendance">Open attendance</Link>
-              </Button>
-            </div>
+            <EmptyState
+              icon={CalendarCheck}
+              title="No attendance activity yet"
+              description="Once the first child checks in, the daily timeline and occupancy signals will appear here."
+              action={
+                <Button asChild>
+                  <Link href="/dashboard/attendance">Open attendance</Link>
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
 
@@ -281,7 +258,7 @@ export default function DashboardPage() {
                   <span className="font-semibold text-slate-950">{item.value}</span>
                 </div>
                 <div className="h-2 rounded-full bg-slate-100">
-                  <div className={cn("h-2 w-4/5 rounded-full", item.color)} />
+                  <div className={`h-2 w-4/5 rounded-full ${item.color}`} />
                 </div>
               </div>
             ))}

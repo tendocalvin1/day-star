@@ -53,16 +53,16 @@ export default function MobileSidebar() {
                 className={cn(
                   "group relative flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-200",
                   isActive
-                    ? "bg-indigo-50 text-indigo-700 shadow-sm"
+                    ? "bg-slate-950 text-white shadow-sm"
                     : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950"
                 )}
               >
                 {isActive && (
-                  <span className="absolute left-0 h-5 w-1 rounded-r-full bg-indigo-600" />
+                  <span className="absolute left-0 h-5 w-1 rounded-r-full bg-indigo-400" />
                 )}
                 <Icon className={cn(
                   "mr-3 h-5 w-5 flex-shrink-0 transition-colors",
-                  isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
+                  isActive ? "text-white" : "text-slate-400 group-hover:text-slate-600"
                 )} />
                 {item.name}
               </Link>

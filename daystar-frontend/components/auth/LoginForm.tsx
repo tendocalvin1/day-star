@@ -9,6 +9,7 @@ import { Lock, Mail } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { FormField, TextInput } from "@/components/shared/FormField";
+import Link from "next/link";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Enter a valid email" }),
@@ -65,9 +66,12 @@ export function LoginForm() {
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Signing in..." : "Sign in"}
         </Button>
-        <p className="text-center text-xs leading-5 text-slate-500">
-          Protected workspace access for DayStar staff.
-        </p>
+        <div className="flex items-center justify-between text-xs text-slate-500">
+          <span>Protected staff access</span>
+          <Link href="/" className="font-semibold text-blue-700 hover:text-blue-600">
+            Back home
+          </Link>
+        </div>
       </div>
     </form>
   );
