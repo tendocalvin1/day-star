@@ -17,13 +17,13 @@ export default function Header() {
   const title = pageTitles[pathname] || "Dashboard"
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/85 px-4 backdrop-blur sm:px-6">
+    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur sm:px-6">
       <div className="flex items-center">
         <MobileSidebar />
         <h1 className="ml-3 text-lg font-semibold text-slate-950 md:ml-0">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
-        <div className="hidden h-9 items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-500 shadow-sm sm:flex">
+        <div className="hidden h-9 min-w-56 items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-500 shadow-sm sm:flex">
           <Search className="h-4 w-4" />
           <span>Search DayStar</span>
         </div>

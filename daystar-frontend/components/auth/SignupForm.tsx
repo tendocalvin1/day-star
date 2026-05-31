@@ -8,7 +8,8 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { Lock, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FormField, SelectInput, TextInput } from "@/components/shared/FormField";
+import { FormField, TextInput } from "@/components/shared/FormField";
+import { cn } from "@/lib/utils";
 
 const signupSchema = z.object({
   email: z.string().email({ message: "Enter a valid email" }),
@@ -26,8 +27,10 @@ export function SignupForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<SignupFormValues>({ resolver: zodResolver(signupSchema) });
+  const selectedRole = watch("role");
 
   async function onSubmit(values: SignupFormValues) {
     try {
@@ -78,16 +81,36 @@ export function SignupForm() {
       </FormField>
 
       <FormField label="Role" error={errors.role?.message} helpText="Choose the access level for this account.">
-        <SelectInput
-          icon={ShieldCheck}
-          hasError={!!errors.role}
-          {...register("role")}
-          aria-invalid={!!errors.role}
-        >
-          <option value="">Select a role</option>
-          <option value="manager">Manager</option>
-          <option value="babysitter">Babysitter</option>
-        </SelectInput>
+        <input type="hidden" {...register("role")} />
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { value: "manager", label: "Manager", helper: "Admin access" },
+            { value: "babysitter", label: "Babysitter", helper: "Care access" },
+          ].map((role) => (
+            <label
+              key={role.value}
+              className={cn(
+                "cursor-pointer rounded-lg border bg-white p-3 text-sm shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50/50",
+                selectedRole === role.value
+                  ? "border-blue-300 ring-2 ring-blue-100"
+                  : "border-slate-200",
+                errors.role && "border-red-300"
+              )}
+            >
+              <input
+                type="radio"
+                value={role.value}
+                className="sr-only"
+                {...register("role")}
+              />
+              <span className="flex items-center gap-2 font-semibold text-slate-950">
+                <ShieldCheck className="h-4 w-4 text-blue-600" />
+                {role.label}
+              </span>
+              <span className="mt-1 block text-xs text-slate-500">{role.helper}</span>
+            </label>
+          ))}
+        </div>
       </FormField>
 
       <div className="space-y-4 pt-1">
@@ -96,7 +119,7 @@ export function SignupForm() {
         </Button>
         <div className="text-center text-sm text-slate-500">
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-indigo-700 hover:text-indigo-600">
+          <Link href="/login" className="font-semibold text-blue-700 hover:text-blue-600">
             Sign in
           </Link>
         </div>

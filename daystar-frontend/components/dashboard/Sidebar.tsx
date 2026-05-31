@@ -19,8 +19,8 @@ export default function Sidebar() {
   const { user, logout } = useAuth()
 
   return (
-    <aside className="hidden md:flex md:w-72 md:flex-col md:border-r border-slate-200/80 bg-white/90 backdrop-blur">
-      <div className="flex h-20 items-center px-5">
+    <aside className="hidden md:flex md:w-[17rem] md:flex-col md:border-r border-slate-200/80 bg-white/95 backdrop-blur">
+      <div className="flex h-18 items-center px-5 py-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm shadow-indigo-600/25">
             <Sparkles className="h-5 w-5" />
@@ -31,7 +31,7 @@ export default function Sidebar() {
           </div>
         </div>
       </div>
-      <nav className="flex-1 space-y-1 px-3 py-2">
+      <nav className="flex-1 space-y-1 px-3 py-1">
         <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
           Workspace
         </p>
@@ -45,16 +45,16 @@ export default function Sidebar() {
               className={cn(
                 "group relative flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-200",
                 isActive
-                  ? "bg-indigo-50 text-indigo-700 shadow-sm"
+                  ? "bg-slate-950 text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950"
               )}
             >
               {isActive && (
-                <span className="absolute left-0 h-5 w-1 rounded-r-full bg-indigo-600" />
+                <span className="absolute left-0 h-5 w-1 rounded-r-full bg-indigo-400" />
               )}
               <Icon className={cn(
                 "mr-3 h-5 w-5 flex-shrink-0 transition-colors",
-                isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
+                isActive ? "text-white" : "text-slate-400 group-hover:text-slate-600"
               )} />
               {item.name}
             </Link>

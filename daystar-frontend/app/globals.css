@@ -1,17 +1,20 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@source "../app/**/*.{js,ts,jsx,tsx,mdx}";
+@source "../components/**/*.{js,ts,jsx,tsx,mdx}";
+@source "../providers/**/*.{js,ts,jsx,tsx,mdx}";
 
 @layer base {
   :root {
-    --background: #f6f8fb;
-    --foreground: #111827;
+    --background: #f7faf9;
+    --foreground: #10201f;
     --card: #ffffff;
-    --muted: #64748b;
-    --primary: #4f46e5;
-    --primary-strong: #3730a3;
-    --border: #e2e8f0;
-    --ring: #818cf8;
+    --muted: #64756f;
+    --primary: #2563eb;
+    --primary-strong: #1e40af;
+    --accent: #0f766e;
+    --border: #dfe8e5;
+    --ring: #93c5fd;
   }
 
   * {
