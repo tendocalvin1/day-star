@@ -49,11 +49,8 @@ export default function LandingPage() {
               </div>
             </Link>
             <div className="flex items-center gap-2">
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/login">Sign In</Link>
-              </Button>
               <Button asChild size="sm">
-                <Link href="/signup">Get Started</Link>
+                <Link href="/login">Open Workspace</Link>
               </Button>
             </div>
           </nav>
@@ -78,9 +75,6 @@ export default function LandingPage() {
                     Open Workspace
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link href="/signup">Create Account</Link>
                 </Button>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
