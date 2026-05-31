@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { Sparkles } from "lucide-react";
-import LoginForm from "../../../components/auth/LoginForm";
+import Link from "next/link"
+import { Sparkles } from "lucide-react"
+import LoginForm from "../../../components/auth/LoginForm"
 
 export default function LoginPage() {
   return (
@@ -20,19 +20,19 @@ export default function LoginPage() {
           <div className="mb-8 text-center">
             <h1 className="text-2xl font-bold text-slate-950">Welcome back</h1>
             <p className="mt-2 text-sm leading-6 text-slate-500">
-            Sign in to manage today&apos;s care with confidence.
+              Sign in to manage today's care with confidence.
             </p>
+          </div>
+          <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs text-amber-800 font-medium">Test credentials:</p>
+            <p className="text-xs text-amber-700 mt-1">Manager: manager@daystar.ug / password123</p>
+            <p className="text-xs text-amber-700">Babysitter: grace@daystar.ug / password123</p>
           </div>
           <LoginForm />
         </section>
 
-        <p className="mt-6 text-center text-sm text-slate-500">
-          New to DayStar?{" "}
-          <Link href="/signup" className="font-semibold text-blue-700 hover:text-blue-600">
-            Create an account
-          </Link>
-        </p>
+
       </div>
     </main>
-  );
+  )
 }

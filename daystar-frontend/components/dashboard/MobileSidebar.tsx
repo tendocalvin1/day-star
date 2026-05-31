@@ -12,6 +12,7 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Attendance", href: "/dashboard/attendance", icon: Calendar },
   { name: "Children", href: "/dashboard/children", icon: Users },
+  { name: "Babysitters", href: "/dashboard/babysitters", icon: Users, role: "manager" },
   { name: "Finance", href: "/dashboard/finance", icon: DollarSign },
   { name: "Incidents", href: "/dashboard/incidents", icon: AlertCircle },
 ]
@@ -43,7 +44,7 @@ export default function MobileSidebar() {
           <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
             Workspace
           </p>
-          {navigation.map((item) => {
+          {navigation.filter(item => !item.role || item.role === user?.role).map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
             return (
