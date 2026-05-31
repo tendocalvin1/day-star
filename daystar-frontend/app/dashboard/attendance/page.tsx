@@ -1,14 +1,36 @@
 "use client"
 
 import { useState } from "react"
-import { Plus } from "lucide-react"
+import { AlertCircle, Baby, CalendarCheck, Clock3, LogOut, Plus, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useAttendance, useCheckIn, useCheckOut } from "@/hooks/useAttendance"
+import { useAttendance, useCheckOut } from "@/hooks/useAttendance"
 import { useNotCheckedIn } from "@/hooks/useChildren"
 import CheckInModal from "@/components/attendance/CheckInModal"
+import { EmptyState } from "@/components/shared/EmptyState"
+import { PageHeader } from "@/components/shared/PageHeader"
+import { StatCard } from "@/components/shared/StatCard"
+import { StatusBadge } from "@/components/shared/StatusBadge"
+import { TextInput } from "@/components/shared/FormField"
+
+function AttendanceTableSkeleton() {
+  return (
+    <div className="space-y-3 p-4">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className="grid grid-cols-2 gap-3 rounded-md border border-slate-100 p-3 md:grid-cols-6">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-5 w-28" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default function AttendancePage() {
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0])
@@ -21,110 +43,99 @@ export default function AttendancePage() {
   const summary = data?.summary
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
-          <p className="text-gray-500">Manage daily check-ins and check-outs</p>
-        </div>
-        <div className="flex items-center space-x-4">
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
-          <Button onClick={() => setIsCheckInModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Check In
-          </Button>
-        </div>
-      </div>
+    <div className="daystar-page">
+      <PageHeader
+        eyebrow="Daily operations"
+        title="Attendance"
+        description="Manage daily check-ins, check-outs, and care occupancy from one focused workspace."
+        actions={
+          <>
+            <TextInput
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full sm:w-auto"
+            />
+            <Button onClick={() => setIsCheckInModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Check In
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-16" />
-              </CardContent>
-            </Card>
-          ))
-        ) : summary ? (
-          <>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Total Children</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{summary.total_children}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Still In</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-daystar-600">{summary.still_in}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Checked Out</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gray-600">{summary.checked_out}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Full Day</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{summary.full_day}</div>
-              </CardContent>
-            </Card>
-          </>
-        ) : null}
+        <StatCard
+          title="Total Children"
+          value={summary?.total_children ?? 0}
+          description="Attendance records"
+          icon={Baby}
+          tone="indigo"
+          isLoading={isLoading}
+        />
+        <StatCard
+          title="Still In"
+          value={summary?.still_in ?? 0}
+          description="Currently checked in"
+          icon={Users}
+          tone="emerald"
+          isLoading={isLoading}
+        />
+        <StatCard
+          title="Checked Out"
+          value={summary?.checked_out ?? 0}
+          description="Completed care today"
+          icon={LogOut}
+          tone="slate"
+          isLoading={isLoading}
+        />
+        <StatCard
+          title="Full Day"
+          value={summary?.full_day ?? 0}
+          description="Full-day sessions"
+          icon={Clock3}
+          tone="sky"
+          isLoading={isLoading}
+        />
       </div>
 
       <Card>
+        <CardHeader className="border-b border-slate-100">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Attendance Records</CardTitle>
+              <CardDescription>Daily attendance for the selected date.</CardDescription>
+            </div>
+            <StatusBadge tone={records.length ? "success" : "neutral"}>
+              {records.length} records
+            </StatusBadge>
+          </div>
+        </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-4">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex items-center space-x-4 py-3">
-                    <Skeleton className="h-5 w-32" />
-                    <Skeleton className="h-5 w-16" />
-                    <Skeleton className="h-5 w-20" />
-                    <Skeleton className="h-5 w-20" />
-                    <Skeleton className="h-5 w-28" />
-                    <Skeleton className="h-8 w-24" />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <AttendanceTableSkeleton />
           ) : error ? (
-            <div className="p-8 text-center">
-              <p className="text-red-600">Failed to load attendance</p>
-              <p className="text-gray-500 mt-2">Please try again later</p>
+            <div className="p-5">
+              <EmptyState
+                icon={AlertCircle}
+                title="Failed to load attendance"
+                description="Please refresh or try another date."
+                tone="danger"
+              />
             </div>
           ) : records.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-gray-500">No attendance records for this date</p>
-              <p className="text-gray-400 mt-1">Click "Check In" to add a child</p>
+            <div className="p-5">
+              <EmptyState
+                icon={CalendarCheck}
+                title="No attendance records for this date"
+                description="Start the first check-in to build today's attendance timeline."
+                action={
+                  <Button onClick={() => setIsCheckInModalOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Check In
+                  </Button>
+                }
+              />
             </div>
           ) : (
             <Table>
@@ -141,10 +152,18 @@ export default function AttendancePage() {
               <TableBody>
                 {records.map((record) => (
                   <TableRow key={record.id}>
-                    <TableCell className="font-medium">{record.child_name}</TableCell>
-                    <TableCell className="capitalize">{record.session_type.replace("_", " ")}</TableCell>
-                    <TableCell>{record.check_in_time}</TableCell>
-                    <TableCell>{record.check_out_time || "-"}</TableCell>
+                    <TableCell className="font-semibold text-slate-950">{record.child_name}</TableCell>
+                    <TableCell>
+                      <StatusBadge tone="info">{record.session_type.replace("_", " ")}</StatusBadge>
+                    </TableCell>
+                    <TableCell className="font-medium">{record.check_in_time}</TableCell>
+                    <TableCell>
+                      {record.check_out_time ? (
+                        <span className="font-medium">{record.check_out_time}</span>
+                      ) : (
+                        <StatusBadge tone="success">Still in</StatusBadge>
+                      )}
+                    </TableCell>
                     <TableCell>
                       {record.babysitter_first_name ? `${record.babysitter_first_name} ${record.babysitter_last_name}` : "-"}
                     </TableCell>

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Calendar, Home, Users, DollarSign, AlertCircle, Menu, LogOut } from "lucide-react"
+import { AlertCircle, Calendar, DollarSign, Home, LogOut, Menu, Sparkles, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -24,56 +24,72 @@ export default function MobileSidebar() {
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu className="h-6 w-6" />
+          <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-64 p-0">
-        <div className="flex h-16 items-center px-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-daystar-600">DayStar</h1>
+      <SheetContent side="left" className="w-72 border-slate-200 p-0">
+        <div className="flex h-20 items-center px-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm shadow-indigo-600/25">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-slate-950">DayStar</h1>
+              <p className="text-xs font-medium text-slate-500">Childcare command center</p>
+            </div>
+          </div>
         </div>
-        <nav className="flex-1 space-y-1 px-3 py-4">
+        <nav className="flex-1 space-y-1 px-3 py-2">
+          <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Workspace
+          </p>
           {navigation.map((item) => {
             const Icon = item.icon
-            const isActive = pathname === item.href
+            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
             return (
               <Link
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors",
+                  "group relative flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-200",
                   isActive
-                    ? "bg-daystar-50 text-daystar-700"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-indigo-50 text-indigo-700 shadow-sm"
+                    : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950"
                 )}
               >
+                {isActive && (
+                  <span className="absolute left-0 h-5 w-1 rounded-r-full bg-indigo-600" />
+                )}
                 <Icon className={cn(
-                  "mr-3 h-5 w-5 flex-shrink-0",
-                  isActive ? "text-daystar-600" : "text-gray-400 group-hover:text-gray-500"
+                  "mr-3 h-5 w-5 flex-shrink-0 transition-colors",
+                  isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
                 )} />
                 {item.name}
               </Link>
             )
           })}
         </nav>
-        <div className="border-t border-gray-200 p-4">
-          <div className="flex items-center mb-4">
-            <div className="h-10 w-10 rounded-full bg-daystar-100 flex items-center justify-center">
-              <span className="text-daystar-700 font-semibold">
-                {user?.email?.charAt(0).toUpperCase() || "U"}
-              </span>
+        <div className="p-4">
+          <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3">
+            <div className="mb-3 flex items-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100">
+                <span className="font-semibold text-emerald-700">
+                  {user?.email?.charAt(0).toUpperCase() || "U"}
+                </span>
+              </div>
+              <div className="ml-3 min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-950">{user?.email}</p>
+                <p className="text-xs font-medium capitalize text-slate-500">{user?.role}</p>
+              </div>
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">{user?.email}</p>
-              <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
-            </div>
+            <button
+              onClick={logout}
+              className="flex w-full items-center rounded-md px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-white hover:text-slate-950"
+            >
+              <LogOut className="mr-3 h-4 w-4 text-slate-400" />
+              Log out
+            </button>
           </div>
-          <button
-            onClick={logout}
-            className="flex w-full items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md"
-          >
-            <LogOut className="mr-3 h-5 w-5 text-gray-400" />
-            Log out
-          </button>
         </div>
       </SheetContent>
     </Sheet>

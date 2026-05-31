@@ -1,6 +1,3 @@
-// This component is used in the login page and handles the login form submission.
-// It uses react-hook-form for form state management and zod for validation. On successful login, it redirects the user to the dashboard.
-
 "use client";
 
 import React from "react";
@@ -8,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Lock, Mail } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { FormField, TextInput } from "@/components/shared/FormField";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Enter a valid email" }),
@@ -36,37 +36,38 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Email</label>
-        <input
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <FormField label="Email" error={errors.email?.message}>
+        <TextInput
+          icon={Mail}
           type="email"
+          placeholder="you@daystar.com"
+          autoComplete="email"
+          hasError={!!errors.email}
           {...register("email")}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-daystar-500 focus:border-daystar-500"
           aria-invalid={!!errors.email}
         />
-        {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
-      </div>
+      </FormField>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Password</label>
-        <input
+      <FormField label="Password" error={errors.password?.message}>
+        <TextInput
+          icon={Lock}
           type="password"
+          placeholder="Enter your password"
+          autoComplete="current-password"
+          hasError={!!errors.password}
           {...register("password")}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-daystar-500 focus:border-daystar-500"
           aria-invalid={!!errors.password}
         />
-        {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
-      </div>
+      </FormField>
 
-      <div>
-        <button
-          type="submit"
-          className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-daystar-500 hover:bg-daystar-600 disabled:opacity-60"
-          disabled={isSubmitting}
-        >
+      <div className="space-y-3 pt-1">
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Signing in..." : "Sign in"}
-        </button>
+        </Button>
+        <p className="text-center text-xs leading-5 text-slate-500">
+          Protected workspace access for DayStar staff.
+        </p>
       </div>
     </form>
   );
