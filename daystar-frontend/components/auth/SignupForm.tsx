@@ -1,3 +1,5 @@
+// TODO: This is a placeholder form to demonstrate the UI. Replace with actual signup logic and API integration.
+// Note: The form includes fields for email, password, confirm password, and role selection. Validation is handled using Zod and react-hook-form.
 "use client";
 
 import React from "react";
